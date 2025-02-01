@@ -1,0 +1,25 @@
+# Web Framework
+flask==2.3.3
+
+# Audio Processing
+openai-whisper==20230918
+sounddevice==0.4.6
+soundfile==0.12.1
+pyaudio==0.2.13
+numpy==1.24.3
+
+# Browser Automation
+playwright==1.38.0
+
+# Machine Learning
+transformers==4.33.2
+torch==2.0.1
+torchaudio==2.0.2
+
+# Google Meet Integration
+google-auth-oauthlib==1.0.0
+google-api-python-client==2.97.0
+
+# Development
+python-dotenv==1.0.0
+playwright install
