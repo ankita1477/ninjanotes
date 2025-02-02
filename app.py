@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, jsonify, Response, stream_with_context
 import whisper
-from transformers import pipeline
+from transformers import pipeline, AutoModelForSeq2SeqGeneration, AutoTokenizer
 import os
 import subprocess
 from pathlib import Path
@@ -14,6 +14,9 @@ from pydub import AudioSegment  # Add this import
 from pytube import YouTube  # Add import
 import yt_dlp  # Add this import for universal video downloading
 from dotenv import load_dotenv
+from sklearn.cluster import AgglomerativeClustering
+from pyannote.audio import Pipeline
+import datetime
 
 # Load environment variables
 load_dotenv()
@@ -105,6 +108,20 @@ try:
 except Exception as e:
     print("Fatal error: Could not initialize models. Exiting...")
     exit(1)
+
+# Initialize additional models
+try:
+    # Speaker diarization model
+    diarization = Pipeline.from_pretrained(
+        "pyannote/speaker-diarization",
+        use_auth_token=HUGGINGFACE_API_KEY
+    )
+    
+    # Key points extraction model
+    key_points_model = AutoModelForSeq2SeqGeneration.from_pretrained("facebook/bart-large-cnn")
+    key_points_tokenizer = AutoTokenizer.from_pretrained("facebook/bart-large-cnn")
+except Exception as e:
+    print(f"Warning: Could not load some models: {e}")
 
 def get_status_message(progress):
     """Get status message based on progress"""
@@ -285,6 +302,98 @@ def process_audio():
             'message': error_message
         }), 500
 
+def analyze_transcript(transcript, audio_length):
+    """Enhanced transcript analysis"""
+    try:
+        # Extract key points
+        inputs = key_points_tokenizer.encode(
+            "extract key points: " + transcript,
+            return_tensors="pt",
+            max_length=1024,
+            truncation=True
+        )
+        key_points = key_points_model.generate(
+            inputs,
+            max_length=150,
+            min_length=40,
+            num_beams=4,
+            length_penalty=2.0
+        )
+        key_points = key_points_tokenizer.decode(key_points[0])
+        
+        # Basic sentiment analysis
+        sentiment_analyzer = pipeline("sentiment-analysis")
+        sentiment = sentiment_analyzer(transcript[:512])[0]
+        
+        # Calculate speech metrics
+        words = transcript.split()
+        word_count = len(words)
+        speaking_rate = word_count / (audio_length / 60)  # words per minute
+        
+        return {
+            "key_points": key_points,
+            "sentiment": sentiment,
+            "metrics": {
+                "word_count": word_count,
+                "duration_minutes": round(audio_length / 60, 2),
+                "speaking_rate": round(speaking_rate, 1)
+            }
+        }
+    except Exception as e:
+        print(f"Analysis error: {e}")
+        return None
+
+def process_with_timestamps(audio_path):
+    """Process audio with speaker detection and timestamps"""
+    try:
+        # Get audio duration
+        audio = AudioSegment.from_file(audio_path)
+        duration = len(audio) / 1000  # duration in seconds
+        
+        # Perform speaker diarization
+        diarization_result = diarization(audio_path)
+        
+        # Transcribe with timestamps
+        result = transcriber.transcribe(
+            audio_path,
+            task="transcribe",
+            return_segments=True
+        )
+        
+        # Combine speaker detection with transcription
+        segments = []
+        for segment in result["segments"]:
+            start_time = str(datetime.timedelta(seconds=int(segment["start"])))
+            end_time = str(datetime.timedelta(seconds=int(segment["end"])))
+            
+            # Find speaker for this segment
+            speaker = "Speaker Unknown"
+            for turn, _, speaker_id in diarization_result.itertracks(yield_label=True):
+                if turn.start <= segment["start"] <= turn.end:
+                    speaker = f"Speaker {speaker_id}"
+                    break
+            
+            segments.append({
+                "start": start_time,
+                "end": end_time,
+                "speaker": speaker,
+                "text": segment["text"]
+            })
+        
+        # Generate full transcript and analysis
+        full_transcript = " ".join(s["text"] for s in segments)
+        analysis = analyze_transcript(full_transcript, duration)
+        
+        return {
+            "segments": segments,
+            "transcript": full_transcript,
+            "analysis": analysis
+        }
+        
+    except Exception as e:
+        print(f"Processing error: {e}")
+        return None
+
 @app.route('/download-video', methods=['POST'])
 def download_video():
     global processing_progress, model_status
@@ -293,8 +402,8 @@ def download_video():
     if not video_url:
         return jsonify({'status': 'error', 'message': 'No video URL provided'}), 400
     
-    processing_progress = 10
-    update_model_status('input', 'processing', 'Downloading video...')
+    processing_progress = 5
+    update_model_status('input', 'processing', 'Starting video download...')
     
     try:
         # Create unique filename using timestamp
@@ -303,69 +412,108 @@ def download_video():
         video_path = os.path.join(app.config['UPLOAD_FOLDER'], f"{base_filename}.mp4")
         audio_path = os.path.join(app.config['UPLOAD_FOLDER'], f"{base_filename}.wav")
         
-        # Configure yt-dlp
+        def progress_hook(d):
+            if d['status'] == 'downloading':
+                progress = float(d['downloaded_bytes'] / d['total_bytes']) * 20 if d['total_bytes'] else 0
+                processing_progress = 5 + progress
+                update_model_status('input', 'processing', f"Downloading: {d.get('_percent_str', '0%')}")
+            elif d['status'] == 'finished':
+                processing_progress = 25
+                update_model_status('input', 'complete', 'Download complete')
+        
+        # Configure yt-dlp with progress hook
         ydl_opts = {
-            'format': 'mp4',  # Specify mp4 format
+            'format': 'bestaudio/best',  # Changed to prefer audio formats
+            'extract_audio': True,  # Extract audio
+            'audio_format': 'wav',  # Convert to WAV
             'outtmpl': video_path,
             'quiet': True,
             'no_warnings': True,
+            'progress_hooks': [progress_hook],
         }
         
-        # Download video
+        # Download video/audio with progress tracking
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             try:
-                ydl.download([video_url])
+                info = ydl.extract_info(video_url, download=True)
+                if not info:
+                    raise Exception("Failed to extract video information")
+                downloaded_file = ydl.prepare_filename(info)
             except Exception as e:
                 raise Exception(f"Video download failed: {str(e)}")
 
-        if not os.path.exists(video_path):
-            raise FileNotFoundError("Video file not found after download")
+        if not os.path.exists(downloaded_file):
+            raise FileNotFoundError("Downloaded file not found")
             
-        print(f"Video downloaded to: {video_path}")  # Debug log
+        print(f"File downloaded to: {downloaded_file}")
         
-        # Extract audio
+        # Convert to WAV if needed
         processing_progress = 30
+        update_model_status('whisper', 'processing', 'Processing audio...')
         try:
-            audio = AudioSegment.from_file(video_path)
-            audio.export(audio_path, format="wav")
-            os.remove(video_path)  # Remove video file after extraction
+            # Load and validate audio
+            audio = AudioSegment.from_file(downloaded_file)
+            if len(audio) == 0:
+                raise ValueError("Audio file is empty")
+            if audio.duration_seconds < 0.1:
+                raise ValueError("Audio is too short")
+                
+            # Export as WAV with specific parameters
+            audio = audio.set_channels(1)  # Convert to mono
+            audio = audio.set_frame_rate(16000)  # Set sample rate to 16kHz
+            audio.export(audio_path, format="wav", parameters=["-ac", "1", "-ar", "16000"])
+            
+            if os.path.exists(downloaded_file) and downloaded_file != audio_path:
+                os.remove(downloaded_file)
             
             if not os.path.exists(audio_path):
-                raise FileNotFoundError("Audio file not found after extraction")
+                raise FileNotFoundError("WAV conversion failed")
                 
-            print(f"Audio extracted to: {audio_path}")  # Debug log
+            print(f"Audio processed and saved to: {audio_path}")
+            processing_progress = 40
         except Exception as e:
-            if os.path.exists(video_path):
-                os.remove(video_path)
-            raise Exception(f"Audio extraction failed: {str(e)}")
+            if os.path.exists(downloaded_file):
+                os.remove(downloaded_file)
+            raise Exception(f"Audio processing failed: {str(e)}")
 
-        # Process the audio
-        processing_progress = 40
-        update_model_status('whisper', 'processing', 'Transcribing audio...')
+        # Validate WAV file before transcription
         try:
-            result = transcriber.transcribe(audio_path)
-            transcript = result["text"].strip()
+            with wave.open(audio_path, 'rb') as wav_file:
+                if wav_file.getnframes() == 0:
+                    raise ValueError("WAV file contains no frames")
+                if wav_file.getsampwidth() == 0:
+                    raise ValueError("Invalid WAV format")
         except Exception as e:
-            raise Exception(f"Transcription failed: {str(e)}")
+            raise ValueError(f"Invalid WAV file: {str(e)}")
 
-        # Generate summary
+        # Process audio with enhanced features
+        processing_progress = 50
+        update_model_status('whisper', 'processing', 'Processing audio with speaker detection...')
+        
+        result = process_with_timestamps(audio_path)
+        if not result:
+            raise ValueError("Failed to process audio")
+            
         processing_progress = 70
-        update_model_status('bart', 'processing', 'Generating summary...')
-        if len(transcript.split()) >= 10:
-            try:
-                summary = summarizer(transcript, max_length=130, min_length=10)[0]['summary_text']
-            except Exception as e:
-                summary = "Error generating summary."
-        else:
-            summary = "Clip is too short for a meaningful summary."
-
+        update_model_status('bart', 'processing', 'Generating analysis...')
+        
+        # Generate final response
+        response = {
+            'status': 'success',
+            'transcript': result['transcript'],
+            'segments': result['segments'],
+            'analysis': result['analysis'],
+            'summary': summarizer(result['transcript'], max_length=130, min_length=10)[0]['summary_text']
+        }
+        
         # Cleanup and return results
         processing_progress = 100
         update_model_status('output', 'complete', 'Processing complete')
         if os.path.exists(audio_path):
             os.remove(audio_path)
-        return jsonify({'status': 'success', 'transcript': transcript, 'summary': summary})
-
+            
+        return jsonify(response)
+        
     except Exception as e:
         # Cleanup on error
         for path in [video_path, audio_path]:

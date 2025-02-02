@@ -17,5 +17,12 @@ transformers>=4.30.2
 torch>=2.0.1
 torchaudio>=2.0.2
 
+# Speaker Detection
+pyannote.audio>=2.1.1
+scikit-learn>=1.0.2
+
+# Enhanced Analysis
+sentencepiece>=0.1.99
+
 # Development
 requests>=2.31.0
