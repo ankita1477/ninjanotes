@@ -7,10 +7,16 @@
 [![No Paid APIs](https://img.shields.io/badge/No%20Paid%20APIs-✓-success.svg)](AI_MODELS.md)
 [![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)](INSTALLATION.md)
 
+<img src="docs/logo-animation.gif" width="200px" alt="NinjaNotes Logo"/>
+
 🎉 **All Features Are Free & Self-Hosted!** 
 No GPT, No Paid APIs, No Hidden Costs
 
 [Setup Guide](INSTALLATION.md) • [Current Status](#-project-status) • [Roadmap](#-roadmap)
+
+<div align="center">
+  <img src="docs/demo-flow.gif" width="600px" alt="Demo Flow"/>
+</div>
 
 </div>
 
@@ -136,38 +142,97 @@ python app.py
 </tr>
 </table>
 
-## 🎨 Features
+## 🎨 Features Matrix
 
-<table>
-<tr>
-<td width="50%">
+<div class="feature-grid">
+  <div class="feature-card">
+    <img src="docs/audio-wave.gif" width="50px"/>
+    <h3>🎵 Audio Support</h3>
+    <ul>
+      <li>MP3, WAV, M4A, OGG</li>
+      <li>Up to 16MB files</li>
+      <li>Auto-validation</li>
+    </ul>
+  </div>
+  
+  <div class="feature-card">
+    <img src="docs/ai-process.gif" width="50px"/>
+    <h3>🤖 AI Processing</h3>
+    <ul>
+      <li>Smart Transcription</li>
+      <li>Key Point Extraction</li>
+      <li>Context Analysis</li>
+    </ul>
+  </div>
+  
+  <div class="feature-card">
+    <img src="docs/progress.gif" width="50px"/>
+    <h3>📊 Real-time Progress</h3>
+    <ul>
+      <li>Live Status Updates</li>
+      <li>Process Monitoring</li>
+      <li>Error Handling</li>
+    </ul>
+  </div>
+</div>
 
-### Audio Processing
-- **Supported Formats**
-  - MP3
-  - WAV
-  - M4A
-  - OGG
-- **File Size**: Up to 16MB
-- **Duration**: No limit
-- **Quality**: Auto-validation
+<style>
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin: 20px 0;
+}
 
-</td>
-<td width="50%">
+.feature-card {
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 15px;
+  text-align: center;
+  transition: transform 0.3s;
+}
 
-### AI Capabilities
-- **Transcription**
-  - 85-95% accuracy
-  - Multiple languages
-  - Noise handling
-- **Summarization**
-  - Key point extraction
-  - Length control
-  - Context awareness
+.feature-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
 
-</td>
-</tr>
-</table>
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.feature-card img {
+  animation: pulse 2s infinite;
+}
+</style>
+
+## 🚀 How It Works
+
+<div align="center">
+  <img src="docs/process-flow.gif" width="800px" alt="Process Flow"/>
+</div>
+
+```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#ff0000', 'edgeLabelBackground':'#ffffffcc', 'tertiaryColor': '#fff0f0'}}}%%
+graph LR
+    A[Upload Audio] -->|Processing| B[Validation]
+    B -->|AI Magic| C[Transcription]
+    C -->|Analysis| D[Summary]
+    style A fill:#ff9900,color:#fff
+    style B fill:#00b894,color:#fff
+    style C fill:#0984e3,color:#fff
+    style D fill:#6c5ce7,color:#fff
+```
+
+## 💫 Live Demo
+
+<div align="center">
+  <img src="docs/live-demo.gif" width="800px" alt="Live Demo"/>
+  
+  [Try it now!](#-quick-start)
+</div>
 
 ## 🔌 API Guide
 
