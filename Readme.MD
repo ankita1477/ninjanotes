@@ -32,6 +32,7 @@ No GPT, No Paid APIs, No Hidden Costs
 - Speaker diarization
 - Detailed text analysis
 - Real-time system status monitoring
+- Now supports any video link for AI analysis via /download-video
 
 ### 🚧 Under Development
 - Google Meet API integration
