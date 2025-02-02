@@ -69,10 +69,13 @@ graph LR
 </td>
 <td width="33%" align="center">
 
-### 2. One-Line Install
-```bash
-git clone https://github.com/ankita1477/ninjanotes.git && cd ninjanotes && python -m venv venv && source venv/bin/activate && pip install -r requirements.txt && python app.py
-```
+### 2. Installation Steps
+1. Clone repo
+2. Create virtual env
+3. Install dependencies
+4. Run application
+
+[Full Setup Guide](INSTALLATION.md)
 
 </td>
 <td width="33%" align="center">
@@ -85,7 +88,7 @@ http://localhost:5000
 </tr>
 </table>
 
-[📚 Detailed Setup Guide](SETUP.md) • [🔧 Troubleshooting](SETUP.md#-troubleshooting)
+[📚 Detailed Setup Guide](INSTALLATION.md) • [🔧 Troubleshooting](INSTALLATION.md#-troubleshooting)
 
 ## 🎨 Features Matrix
 

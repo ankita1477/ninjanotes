@@ -2,132 +2,158 @@
 
 # 📥 NinjaNotes Installation Guide
 
-> Get up and running in minutes!
+> Step-by-step setup instructions
 
 </div>
 
-## 📋 Prerequisites Checklist
+## 📋 Prerequisites
 
-<table>
-<tr>
-<td>
-
-- [ ] Python 3.8+
-- [ ] FFmpeg
-- [ ] 4GB RAM
+First, ensure you have:
+- [ ] Python 3.8 or higher
 - [ ] Git
-- [ ] Modern Browser
+- [ ] FFmpeg
+- [ ] 4GB RAM minimum
+- [ ] Modern web browser
 
-</td>
-<td>
+## 🚀 Installation Steps
 
-Check with these commands:
-```bash
-python --version
-ffmpeg -version
-git --version
-```
+### Step 1: Install Python
+1. Download Python 3.8+ from [python.org](https://python.org)
+2. Run installer
+3. ✅ Check "Add Python to PATH"
+4. Verify installation:
+   ```bash
+   python --version
+   pip --version
+   ```
 
-</td>
-</tr>
-</table>
+### Step 2: Install FFmpeg
 
-## 🚀 Quick Install
-
-### Windows One-Line Install
-```powershell
-Set-ExecutionPolicy RemoteSignedUser; iwr -useb https://raw.githubusercontent.com/ankita1477/ninjanotes/main/install.ps1 | iex
-```
-
-### Linux/MacOS One-Line Install
-```bash
-curl -fsSL https://raw.githubusercontent.com/ankita1477/ninjanotes/main/install.sh | bash
-```
-
-## 📖 Step-by-Step Guide
-
-<details>
-<summary>1️⃣ Python Installation</summary>
-
-Download Python 3.8+ from [python.org](https://python.org)
-```bash
-# Verify installation
-python --version
-pip --version
-```
-</details>
-
-<details>
-<summary>2️⃣ FFmpeg Setup</summary>
-
-#### 🪟 Windows
-1. Download from [ffmpeg.org](https://ffmpeg.org/download.html)
+#### Windows:
+1. Download FFmpeg from [ffmpeg.org](https://ffmpeg.org/download.html)
 2. Extract to `C:\ffmpeg-7.1-essentials_build`
-3. Add to PATH
+3. Add to PATH:
+   - Open System Properties
+   - Click "Environment Variables"
+   - Edit "Path"
+   - Add `C:\ffmpeg-7.1-essentials_build\bin`
+4. Verify:
+   ```bash
+   ffmpeg -version
+   ```
 
-#### 🐧 Linux
+#### Linux:
 ```bash
-sudo apt update && sudo apt install ffmpeg -y
+# Update package list
+sudo apt update
+
+# Install FFmpeg
+sudo apt install ffmpeg -y
+
+# Verify installation
+ffmpeg -version
 ```
 
-#### 🍎 MacOS
+#### MacOS:
 ```bash
+# Install Homebrew if needed
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# Install FFmpeg
 brew install ffmpeg
+
+# Verify installation
+ffmpeg -version
 ```
-</details>
 
-<details>
-<summary>3️⃣ Project Setup</summary>
-
+### Step 3: Clone Repository
 ```bash
-# Clone & Setup
+# Clone the repository
 git clone https://github.com/ankita1477/ninjanotes.git
+
+# Navigate to project directory
 cd ninjanotes
+```
 
-# Virtual Environment
+### Step 4: Set Up Virtual Environment
+```bash
+# Create virtual environment
 python -m venv venv
-source venv/bin/activate  # or `venv\Scripts\activate` on Windows
 
-# Dependencies
+# Activate virtual environment
+# On Windows:
+venv\Scripts\activate
+# On Linux/MacOS:
+source venv/bin/activate
+```
+
+### Step 5: Install Dependencies
+```bash
+# Upgrade pip
+python -m pip install --upgrade pip
+
+# Install requirements
 pip install -r requirements.txt
+```
 
-# Create Directories
+### Step 6: Create Required Directories
+```bash
+# Create uploads directory
 mkdir uploads
 ```
-</details>
 
-## ✅ Verification
-
-Run these tests to verify your installation:
-
+### Step 7: Run Application
 ```bash
-# 1. Test Python
-python -c "print('Python works!')"
-
-# 2. Test FFmpeg
-ffmpeg -version
-
-# 3. Test Application
+# Start the application
 python app.py
 ```
 
+### Step 8: Verify Installation
+1. Open browser
+2. Visit: http://localhost:5000
+3. Upload test audio file
+4. Check transcription
+
 ## 🔧 Troubleshooting
 
-<details>
-<summary>Common Issues</summary>
+### Common Issues
 
-| Error | Solution |
-|-------|----------|
-| `Python not found` | Add Python to PATH |
-| `FFmpeg missing` | Check FFmpeg installation |
-| `Port 5000 in use` | Change port in app.py |
+1. **Python Command Not Found**
+   ```bash
+   # Windows: Add to PATH manually
+   # Linux/MacOS: Use python3 instead
+   python3 --version
+   ```
 
-</details>
+2. **FFmpeg Not Found**
+   ```bash
+   # Check PATH
+   echo $PATH
+   # or on Windows
+   echo %PATH%
+   ```
 
-<div align="center">
+3. **Port 5000 Already in Use**
+   ```python
+   # In app.py, modify:
+   app.run(port=5001)
+   ```
 
----
+4. **Virtual Environment Issues**
+   ```bash
+   # If venv fails, try:
+   python -m pip install --upgrade virtualenv
+   python -m virtualenv venv
+   ```
+
+## ✅ Success Checklist
+
+- [ ] Python installed & in PATH
+- [ ] FFmpeg installed & in PATH
+- [ ] Repository cloned
+- [ ] Virtual environment active
+- [ ] Dependencies installed
+- [ ] Application running
+- [ ] Web interface accessible
 
 Need help? [Open an Issue](https://github.com/ankita1477/ninjanotes/issues)
-
-</div>
