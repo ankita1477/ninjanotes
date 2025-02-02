@@ -144,9 +144,11 @@ python app.py
 
 ## 🎨 Features Matrix
 
+<link rel="stylesheet" href="static/css/style.css">
+
 <div class="feature-grid">
   <div class="feature-card">
-    <img src="docs/audio-wave.gif" width="50px"/>
+    <img src="docs/audio-wave.gif" alt="Audio Support"/>
     <h3>🎵 Audio Support</h3>
     <ul>
       <li>MP3, WAV, M4A, OGG</li>
@@ -156,7 +158,7 @@ python app.py
   </div>
   
   <div class="feature-card">
-    <img src="docs/ai-process.gif" width="50px"/>
+    <img src="docs/ai-process.gif" alt="AI Processing"/>
     <h3>🤖 AI Processing</h3>
     <ul>
       <li>Smart Transcription</li>
@@ -166,7 +168,7 @@ python app.py
   </div>
   
   <div class="feature-card">
-    <img src="docs/progress.gif" width="50px"/>
+    <img src="docs/progress.gif" alt="Real-time Progress"/>
     <h3>📊 Real-time Progress</h3>
     <ul>
       <li>Live Status Updates</li>
