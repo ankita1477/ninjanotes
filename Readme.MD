@@ -22,7 +22,7 @@
 
 - [🚀 Quick Start](#-quick-start)
 - [✨ Features](#-features)
-- [🛠️ Installation](#️-installation)
+- [🛠️ Installation](INSTALLATION.md)
 - [📚 Documentation](#-documentation)
 - [🔧 Troubleshooting](#-troubleshooting)
 - [🤝 Contributing](#-contributing)
@@ -55,6 +55,7 @@ graph LR
 </div>
 
 ## ⚡ SETUP IN 3 STEPS
+> 👉 For detailed installation instructions, [click here](INSTALLATION.md)
 
 <table>
 <tr>
