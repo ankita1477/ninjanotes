@@ -33,42 +33,20 @@ Automatically join, record, transcribe, and summarize Google Meet sessions with 
 
 ## 🚀 Quick Start
 
-### 1. Prerequisites
+See detailed instructions in [INSTALLATION.md](INSTALLATION.md)
 
-- Python 3.8+
-- FFmpeg
-- Chrome/Chromium browser
-
-### 2. Clone the repository
+Quick setup:
 ```bash
 git clone https://github.com/yourusername/ninjanotes.git
 cd ninjanotes
-```
-
-### 3. Install FFmpeg
-- Download FFmpeg essentials build
-- Extract to C:\ffmpeg-7.1-essentials_build
-- Add bin directory to PATH
-
-### 4. Set up Python environment
-```bash
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 playwright install
-```
-
-### 5. Create required directories
-```bash
-mkdir uploads
-```
-
-### 6. Run the application
-```bash
 python app.py
 ```
 
-7. Open `http://localhost:5000` in your browser
+Visit `http://localhost:5000` to start using NinjaNotes.
 
 ## Usage
 
