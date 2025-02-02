@@ -1,6 +1,6 @@
-from flask import Flask, render_template, request, jsonify, Response, stream_with_context
+from flask import Flask, render_template, request, jsonify, Response, stream_with_context, send_file
 import whisper
-from transformers import pipeline, AutoModelForSeq2SeqGeneration, AutoTokenizer
+from transformers import pipeline
 import os
 import subprocess
 from pathlib import Path
@@ -14,9 +14,16 @@ from pydub import AudioSegment  # Add this import
 from pytube import YouTube  # Add import
 import yt_dlp  # Add this import for universal video downloading
 from dotenv import load_dotenv
-from sklearn.cluster import AgglomerativeClustering
 from pyannote.audio import Pipeline
-import datetime
+from datetime import timedelta
+import torch
+from textblob import TextBlob
+from collections import Counter
+import spacy
+from keybert import KeyBERT
+import psutil
+import GPUtil
+import shutil  # Add this import for disk usage info
 
 # Load environment variables
 load_dotenv()
@@ -109,19 +116,60 @@ except Exception as e:
     print("Fatal error: Could not initialize models. Exiting...")
     exit(1)
 
-# Initialize additional models
+# Initialize speaker diarization model
 try:
-    # Speaker diarization model
-    diarization = Pipeline.from_pretrained(
-        "pyannote/speaker-diarization",
+    pipeline = Pipeline.from_pretrained(
+        "pyannote/speaker-diarization@2.1",
         use_auth_token=HUGGINGFACE_API_KEY
     )
-    
-    # Key points extraction model
-    key_points_model = AutoModelForSeq2SeqGeneration.from_pretrained("facebook/bart-large-cnn")
-    key_points_tokenizer = AutoTokenizer.from_pretrained("facebook/bart-large-cnn")
 except Exception as e:
-    print(f"Warning: Could not load some models: {e}")
+    print(f"Warning: Speaker diarization not available: {e}")
+    pipeline = None
+
+# Initialize additional NLP models
+try:
+    nlp = spacy.load('en_core_web_sm')
+    key_model = KeyBERT()
+except Exception as e:
+    print(f"Warning: Additional NLP models not available: {e}")
+    nlp = None
+    key_model = None
+
+def format_timestamp(seconds):
+    """Convert seconds to HH:MM:SS format"""
+    return str(timedelta(seconds=int(seconds)))
+
+def process_with_speaker_diarization(audio_path, transcript):
+    """Add speaker detection and timestamps to transcript"""
+    try:
+        if pipeline is None:
+            return transcript
+            
+        # Run speaker diarization
+        diarization = pipeline(audio_path)
+        
+        # Split transcript into sentences
+        sentences = transcript.split('. ')
+        
+        # Match sentences with speakers and timestamps
+        result = []
+        current_pos = 0
+        
+        for turn, _, speaker in diarization.itertracks(yield_label=True):
+            start_time = format_timestamp(turn.start)
+            end_time = format_timestamp(turn.end)
+            
+            # Find matching sentence
+            while current_pos < len(sentences):
+                sentence = sentences[current_pos]
+                result.append(f"[{start_time} - {end_time}] {speaker}: {sentence}")
+                current_pos += 1
+                break
+        
+        return '\n'.join(result)
+    except Exception as e:
+        print(f"Speaker diarization failed: {e}")
+        return transcript
 
 def get_status_message(progress):
     """Get status message based on progress"""
@@ -302,98 +350,58 @@ def process_audio():
             'message': error_message
         }), 500
 
-def analyze_transcript(transcript, audio_length):
-    """Enhanced transcript analysis"""
+def analyze_text(text):
+    """Perform detailed text analysis"""
+    analysis = {
+        'topics': [],
+        'sentiment': 'neutral',
+        'languageStats': [],
+        'speakers': []
+    }
+    
     try:
-        # Extract key points
-        inputs = key_points_tokenizer.encode(
-            "extract key points: " + transcript,
-            return_tensors="pt",
-            max_length=1024,
-            truncation=True
-        )
-        key_points = key_points_model.generate(
-            inputs,
-            max_length=150,
-            min_length=40,
-            num_beams=4,
-            length_penalty=2.0
-        )
-        key_points = key_points_tokenizer.decode(key_points[0])
+        # Extract key topics
+        if key_model:
+            keywords = key_model.extract_keywords(text, 
+                keyphrase_ngram_range=(1, 2),
+                stop_words='english',
+                use_maxsum=True,
+                nr_candidates=20,
+                top_n=5
+            )
+            analysis['topics'] = [
+                {'text': k, 'score': int(s * 100)} 
+                for k, s in keywords
+            ]
         
-        # Basic sentiment analysis
-        sentiment_analyzer = pipeline("sentiment-analysis")
-        sentiment = sentiment_analyzer(transcript[:512])[0]
+        # Sentiment analysis
+        blob = TextBlob(text)
+        sentiment_score = blob.sentiment.polarity
+        if sentiment_score > 0.1:
+            analysis['sentiment'] = 'positive'
+        elif sentiment_score < -0.1:
+            analysis['sentiment'] = 'negative'
         
-        # Calculate speech metrics
-        words = transcript.split()
-        word_count = len(words)
-        speaking_rate = word_count / (audio_length / 60)  # words per minute
+        # Language statistics
+        if nlp:
+            doc = nlp(text)
+            words = len(doc)
+            sentences = len(list(doc.sents))
+            analysis['languageStats'] = [
+                {'label': 'Word Count', 'value': words},
+                {'label': 'Sentence Count', 'value': sentences},
+                {'label': 'Average Words per Sentence', 
+                 'value': round(words/sentences if sentences > 0 else 0, 1)},
+                {'label': 'Unique Words', 
+                 'value': len(set(token.text.lower() for token in doc))}
+            ]
         
-        return {
-            "key_points": key_points,
-            "sentiment": sentiment,
-            "metrics": {
-                "word_count": word_count,
-                "duration_minutes": round(audio_length / 60, 2),
-                "speaking_rate": round(speaking_rate, 1)
-            }
-        }
+        return analysis
     except Exception as e:
         print(f"Analysis error: {e}")
-        return None
+        return analysis
 
-def process_with_timestamps(audio_path):
-    """Process audio with speaker detection and timestamps"""
-    try:
-        # Get audio duration
-        audio = AudioSegment.from_file(audio_path)
-        duration = len(audio) / 1000  # duration in seconds
-        
-        # Perform speaker diarization
-        diarization_result = diarization(audio_path)
-        
-        # Transcribe with timestamps
-        result = transcriber.transcribe(
-            audio_path,
-            task="transcribe",
-            return_segments=True
-        )
-        
-        # Combine speaker detection with transcription
-        segments = []
-        for segment in result["segments"]:
-            start_time = str(datetime.timedelta(seconds=int(segment["start"])))
-            end_time = str(datetime.timedelta(seconds=int(segment["end"])))
-            
-            # Find speaker for this segment
-            speaker = "Speaker Unknown"
-            for turn, _, speaker_id in diarization_result.itertracks(yield_label=True):
-                if turn.start <= segment["start"] <= turn.end:
-                    speaker = f"Speaker {speaker_id}"
-                    break
-            
-            segments.append({
-                "start": start_time,
-                "end": end_time,
-                "speaker": speaker,
-                "text": segment["text"]
-            })
-        
-        # Generate full transcript and analysis
-        full_transcript = " ".join(s["text"] for s in segments)
-        analysis = analyze_transcript(full_transcript, duration)
-        
-        return {
-            "segments": segments,
-            "transcript": full_transcript,
-            "analysis": analysis
-        }
-        
-    except Exception as e:
-        print(f"Processing error: {e}")
-        return None
-
+# Update the download_video function
 @app.route('/download-video', methods=['POST'])
 def download_video():
     global processing_progress, model_status
@@ -486,34 +494,75 @@ def download_video():
         except Exception as e:
             raise ValueError(f"Invalid WAV file: {str(e)}")
 
-        # Process audio with enhanced features
+        # Process the audio with Whisper
         processing_progress = 50
-        update_model_status('whisper', 'processing', 'Processing audio with speaker detection...')
-        
-        result = process_with_timestamps(audio_path)
-        if not result:
-            raise ValueError("Failed to process audio")
+        update_model_status('whisper', 'processing', 'Transcribing audio...')
+        try:
+            result = transcriber.transcribe(audio_path)
+            if not result or not result.get("text"):
+                raise ValueError("No speech detected in audio")
+                
+            # Get basic transcript
+            transcript = result["text"].strip()
             
+            # Add timestamps and detect speakers
+            transcript = process_with_speaker_diarization(audio_path, transcript)
+            
+            # Get video duration
+            audio = AudioSegment.from_file(audio_path)
+            duration = format_timestamp(audio.duration_seconds)
+            
+            # Get any chapter markers or segments from the video
+            segments = result.get("segments", [])
+            chapters = [
+                {
+                    "start": format_timestamp(seg["start"]),
+                    "end": format_timestamp(seg["end"]),
+                    "text": seg["text"]
+                }
+                for seg in segments
+            ]
+        except Exception as e:
+            raise Exception(f"Transcription failed: {str(e)}")
+
+        # Generate summary
         processing_progress = 70
-        update_model_status('bart', 'processing', 'Generating analysis...')
+        update_model_status('bart', 'processing', 'Generating summary...')
+        if len(transcript.split()) >= 10:
+            try:
+                summary = summarizer(transcript, max_length=130, min_length=10)[0]['summary_text']
+            except Exception as e:
+                summary = "Error generating summary."
+        else:
+            summary = "Clip is too short for a meaningful summary."
+
+        # Add analysis
+        analysis = analyze_text(transcript)
         
-        # Generate final response
-        response = {
-            'status': 'success',
-            'transcript': result['transcript'],
-            'segments': result['segments'],
-            'analysis': result['analysis'],
-            'summary': summarizer(result['transcript'], max_length=130, min_length=10)[0]['summary_text']
+        # Get stats
+        stats = {
+            'wordCount': len(transcript.split()),
+            'speakerCount': len(set(line.split(']')[1].split(':')[0].strip() 
+                              for line in transcript.split('\n') 
+                              if ']' in line and ':' in line)),
+            'sentiment': analysis['sentiment']
         }
-        
+
         # Cleanup and return results
         processing_progress = 100
         update_model_status('output', 'complete', 'Processing complete')
         if os.path.exists(audio_path):
             os.remove(audio_path)
-            
-        return jsonify(response)
-        
+        return jsonify({
+            'status': 'success',
+            'transcript': transcript,
+            'summary': summary,
+            'duration': duration,
+            'chapters': chapters,
+            'analysis': analysis,
+            'stats': stats
+        })
+
     except Exception as e:
         # Cleanup on error
         for path in [video_path, audio_path]:
@@ -525,6 +574,143 @@ def download_video():
         
         print(f"Error processing video: {str(e)}")  # Debug log
         return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/system-status')
+def system_status():
+    """Get real-time system status"""
+    try:
+        # System metrics
+        cpu_percent = psutil.cpu_percent(interval=1)
+        memory = psutil.virtual_memory()
+        disk = psutil.disk_usage('/')
+        
+        # Process specific info
+        process = psutil.Process()
+        process_memory = process.memory_info()
+        
+        # Network stats
+        net = psutil.net_io_counters()
+        net_stats = {
+            'bytes_sent': net.bytes_sent,
+            'bytes_recv': net.bytes_recv,
+            'packets_sent': net.packets_sent,
+            'packets_recv': net.packets_recv
+        }
+        
+        # GPU information
+        try:
+            gpus = GPUtil.getGPUs()
+            gpu_info = {
+                'name': gpus[0].name if gpus else 'No GPU',
+                'memory': gpus[0].memoryUsed if gpus else 0,
+                'percent': gpus[0].memoryUtil * 100 if gpus else 0,
+                'temperature': gpus[0].temperature if gpus else 0
+            }
+        except Exception as e:
+            print(f"GPU info error: {e}")
+            gpu_info = {'name': 'N/A', 'memory': 0, 'percent': 0, 'temperature': 0}
+        
+        # Model status
+        model_info = {
+            'current_stage': model_status['current_stage'],
+            'progress': processing_progress
+        }
+        
+        # Disk usage for uploads folder
+        upload_path = app.config['UPLOAD_FOLDER']
+        try:
+            total, used, free = shutil.disk_usage(upload_path)
+            disk_info = {
+                'total': total // (2**30),  # GB
+                'used': used // (2**30),
+                'free': free // (2**30),
+                'percent': (used / total) * 100
+            }
+        except Exception as e:
+            print(f"Disk info error: {e}")
+            disk_info = {'total': 0, 'used': 0, 'free': 0, 'percent': 0}
+
+        return jsonify({
+            'timestamp': time.time(),
+            'audio': {
+                'status': model_status['current_stage'] or 'Waiting',
+                'bufferSize': processing_progress,
+                'sampleRate': 16000,
+                'memory': memory.used // (1024 * 1024),
+                'memoryPercent': memory.percent
+            },
+            'system': {
+                'cpu': {
+                    'percent': cpu_percent,
+                    'cores': psutil.cpu_count(),
+                    'frequency': psutil.cpu_freq().current if psutil.cpu_freq() else 0
+                },
+                'memory': {
+                    'total': memory.total // (1024 * 1024),  # MB
+                    'available': memory.available // (1024 * 1024),
+                    'used': memory.used // (1024 * 1024),
+                    'percent': memory.percent
+                },
+                'disk': disk_info,
+                'process': {
+                    'memory_mb': process_memory.rss // (1024 * 1024),
+                    'cpu_percent': process.cpu_percent(),
+                    'threads': process.num_threads()
+                }
+            },
+            'model': {
+                'name': 'Whisper Base',
+                'status': model_info['current_stage'],
+                'progress': model_info['progress'],
+                'load': cpu_percent,
+                'accuracy': 95,
+                'gpuMemory': gpu_info['memory'],
+                'gpuPercent': gpu_info['percent'],
+                'gpuTemp': gpu_info['temperature']
+            },
+            'network': {
+                'status': 'Connected',
+                'download': net_stats['bytes_recv'] / (1024 * 1024),  # MB
+                'upload': net_stats['bytes_sent'] / (1024 * 1024),
+                'packets_received': net_stats['packets_recv'],
+                'packets_sent': net_stats['packets_sent'],
+                'bandwidth': (net_stats['bytes_recv'] + net_stats['bytes_sent']) / (1024 * 1024)
+            },
+            'logs': [
+                {'message': f"CPU Usage: {cpu_percent}%", 'type': 'info'},
+                {'message': f"Memory Usage: {memory.percent}%", 'type': 'info'},
+                {'message': f"GPU: {gpu_info['name']}", 'type': 'info'},
+                {'message': f"Disk Space: {disk_info['free']}GB free", 'type': 'info'}
+            ]
+        })
+    except Exception as e:
+        print(f"Status monitoring error: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'message': str(e),
+            'timestamp': time.time()
+        }), 500
+
+@app.route('/sample-audio/<sample_type>')
+def sample_audio(sample_type):
+    """Serve sample audio files for testing"""
+    try:
+        sample_files = {
+            'speech': 'a1.mp3',
+            'meeting': 'a2.mp3',
+            'lecture': 'a3.mp3'
+        }
+        
+        if sample_type not in sample_files:
+            return jsonify({'error': 'Invalid sample type'}), 400
+            
+        sample_path = os.path.join(app.root_path, 'static', 'samples', sample_files[sample_type])
+        if not os.path.exists(sample_path):
+            return jsonify({'error': 'Sample file not found'}), 404
+            
+        return send_file(sample_path, mimetype='audio/mpeg')
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/')
 def index():

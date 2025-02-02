@@ -1,24 +1,7 @@
 <div align="center">
 
 # 🎯 NinjaNotes
-> AI-Powered Audio & Video Analysis Assistant
-
-# Table of Contents
-- [🚀 Quick Start](#-quick-start)
-- [🌟 Latest Features](#-latest-features)
-  - [Video Analysis](#-video-analysis)
-  - [Enhanced AI Analysis](#-enhanced-ai-analysis)
-  - [Timeline View](#-timeline-view)
-- [📚 Documentation](#-documentation)
-  - [Installation Guide](INSTALLATION.md)
-  - [API Guide](#-api-guide)
-  - [Troubleshooting](#-troubleshooting)
-- [🛠️ Tech Stack](#-tech-stack)
-- [📈 Analysis Metrics](#-analysis-metrics)
-- [🌟 Project Status](#-project-status)
-- [🔄 Recent Updates](#-recent-updates)
-- [🤝 Contributing](#-contributing)
-- [🆘 Support](#-support)
+> Free & Open Source AI-Powered Audio Assistant
 
 [![Open Source](https://img.shields.io/badge/Open%20Source-100%25-brightgreen.svg)](LICENSE)
 [![No Paid APIs](https://img.shields.io/badge/No%20Paid%20APIs-✓-success.svg)](AI_MODELS.md)
@@ -38,61 +21,6 @@ No GPT, No Paid APIs, No Hidden Costs
 </div>
 
 ---
-
-## 🌟 Latest Features
-
-### 🎥 Video Analysis
-- Universal video download support (YouTube & more)
-- Automatic audio extraction
-- Multi-speaker detection
-- Timestamped transcription
-
-### 🧠 Enhanced AI Analysis
-- Speaker identification
-- Sentiment analysis
-- Key points extraction
-- Speech metrics (pace, duration, word count)
-
-### 📊 Timeline View
-- Speaker-based segmentation
-- Time-stamped dialogue
-- Interactive timeline
-- Copyable transcripts
-
-## 🎯 Key Features Matrix
-
-<table>
-<tr>
-<td width="50%">
-
-### 🎬 Media Support
-- YouTube videos
-- Audio files (MP3, WAV, M4A)
-- Multi-speaker content
-- Real-time processing
-
-</td>
-<td width="50%">
-
-### 🤖 AI Capabilities
-- Speaker detection
-- Sentiment analysis
-- Key points extraction
-- Smart summarization
-
-</td>
-</tr>
-</table>
-
-## 📈 Analysis Metrics
-
-| Feature | Description |
-|---------|-------------|
-| Speaker Detection | Identifies different speakers in audio |
-| Timeline View | Shows who spoke when |
-| Speech Rate | Words per minute analysis |
-| Sentiment | Emotional tone analysis |
-| Key Points | Important topics extracted |
 
 ## 🌟 Project Status
 
@@ -357,42 +285,12 @@ ninjanotes/
 
 Need help? [Open an Issue](https://github.com/ankita1477/ninjanotes/issues)
 
-## 🔄 Recent Updates
+## 🔄 Latest Updates
 
-### Version 2.0
-- Added multi-speaker detection
-- Implemented sentiment analysis
-- Added speech metrics
-- Enhanced timeline view
-- Improved video processing
-
-### Version 1.5
-- Added video download support
-- Improved audio processing
-- Enhanced error handling
-- Better progress tracking
-
-## 🎯 New Features Deep Dive
-
-### Speaker Detection
-```mermaid
-graph TD
-    A[Audio Input] -->|Processing| B[Speaker Detection]
-    B -->|Analysis| C[Timeline Creation]
-    C -->|Output| D[Speaker Timeline]
-```
-
-### Analysis Pipeline
-- Speech rate calculation
-- Sentiment detection
-- Key points extraction
-- Timeline generation
-
-### Enhanced Results
-- Speaker-based segmentation
-- Sentiment indicators
-- Performance metrics
-- Interactive timeline
+- Added basic audio processing
+- Implemented file validation
+- Setting up model infrastructure
+- Planning Google Meet integration
 
 ## 🎯 Next Steps
 
