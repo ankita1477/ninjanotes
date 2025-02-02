@@ -1,104 +1,133 @@
-# 📥 Installation Guide
+<div align="center">
 
-## System Requirements
+# 📥 NinjaNotes Installation Guide
 
-- Windows 10/11 or Linux/MacOS
-- 4GB RAM minimum (8GB recommended)
-- 2GB free disk space
-- Python 3.8 or higher
+> Get up and running in minutes!
 
-## Step-by-Step Installation
+</div>
 
-### 1. Install Python
-1. Download Python 3.8+ from [python.org](https://python.org)
-2. During installation, check "Add Python to PATH"
-3. Verify installation:
+## 📋 Prerequisites Checklist
+
+<table>
+<tr>
+<td>
+
+- [ ] Python 3.8+
+- [ ] FFmpeg
+- [ ] 4GB RAM
+- [ ] Git
+- [ ] Modern Browser
+
+</td>
+<td>
+
+Check with these commands:
 ```bash
 python --version
+ffmpeg -version
+git --version
 ```
 
-### 2. Install FFmpeg
-#### Windows:
-1. Download FFmpeg from [ffmpeg.org](https://ffmpeg.org/download.html)
-2. Extract to `C:\ffmpeg-7.1-essentials_build`
-3. Add to PATH:
-   - Open System Properties > Advanced > Environment Variables
-   - Add `C:\ffmpeg-7.1-essentials_build\bin` to Path
+</td>
+</tr>
+</table>
 
-#### Linux:
+## 🚀 Quick Install
+
+### Windows One-Line Install
+```powershell
+Set-ExecutionPolicy RemoteSignedUser; iwr -useb https://raw.githubusercontent.com/ankita1477/ninjanotes/main/install.ps1 | iex
+```
+
+### Linux/MacOS One-Line Install
 ```bash
-sudo apt update
-sudo apt install ffmpeg
+curl -fsSL https://raw.githubusercontent.com/ankita1477/ninjanotes/main/install.sh | bash
 ```
 
-#### MacOS:
+## 📖 Step-by-Step Guide
+
+<details>
+<summary>1️⃣ Python Installation</summary>
+
+Download Python 3.8+ from [python.org](https://python.org)
+```bash
+# Verify installation
+python --version
+pip --version
+```
+</details>
+
+<details>
+<summary>2️⃣ FFmpeg Setup</summary>
+
+#### 🪟 Windows
+1. Download from [ffmpeg.org](https://ffmpeg.org/download.html)
+2. Extract to `C:\ffmpeg-7.1-essentials_build`
+3. Add to PATH
+
+#### 🐧 Linux
+```bash
+sudo apt update && sudo apt install ffmpeg -y
+```
+
+#### 🍎 MacOS
 ```bash
 brew install ffmpeg
 ```
+</details>
 
-### 3. Setup Project
+<details>
+<summary>3️⃣ Project Setup</summary>
+
 ```bash
-# Clone repository
+# Clone & Setup
 git clone https://github.com/ankita1477/ninjanotes.git
 cd ninjanotes
 
-# Create virtual environment
+# Virtual Environment
 python -m venv venv
+source venv/bin/activate  # or `venv\Scripts\activate` on Windows
 
-# Activate virtual environment
-# Windows:
-venv\Scripts\activate
-# Linux/MacOS:
-source venv/bin/activate
-
-# Install dependencies
+# Dependencies
 pip install -r requirements.txt
 
-# Install browser automation
-playwright install
-
-# Create required directory
+# Create Directories
 mkdir uploads
 ```
+</details>
 
-### 4. Configuration
-1. Create `.env` file in project root (optional - currently using hardcoded token)
-2. Add your Hugging Face API token:
+## ✅ Verification
+
+Run these tests to verify your installation:
+
 ```bash
-HUGGINGFACE_API_KEY=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
-```
+# 1. Test Python
+python -c "print('Python works!')"
 
-Note: The API token is currently hardcoded in app.py. You can optionally use the .env file for better security.
+# 2. Test FFmpeg
+ffmpeg -version
 
-### 5. Run Application
-```bash
+# 3. Test Application
 python app.py
 ```
 
-Access the application at `http://localhost:5000`
+## 🔧 Troubleshooting
 
-## Verification Steps
+<details>
+<summary>Common Issues</summary>
 
-1. Check FFmpeg installation:
-```bash
-ffmpeg -version
-```
+| Error | Solution |
+|-------|----------|
+| `Python not found` | Add Python to PATH |
+| `FFmpeg missing` | Check FFmpeg installation |
+| `Port 5000 in use` | Change port in app.py |
 
-2. Verify Python packages:
-```bash
-pip list
-```
+</details>
 
-3. Test browser automation:
-```bash
-playwright codegen google.com
-```
+<div align="center">
 
-## Troubleshooting
+---
 
-If you encounter any issues, check:
-1. Python PATH configuration
-2. FFmpeg PATH configuration
-3. Virtual environment activation
-4. Required ports availability (5000)
-5. API keys configuration
+Need help? [Open an Issue](https://github.com/ankita1477/ninjanotes/issues)
+
+</div>

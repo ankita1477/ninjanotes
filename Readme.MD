@@ -2,173 +2,187 @@
 
 # 🎯 NinjaNotes
 
-[![Python](https://img.shields.io/badge/Python-3.8+-blue.svg?logo=python&logoColor=white)](https://www.python.org)
-[![Flask](https://img.shields.io/badge/Flask-2.0+-green.svg?logo=flask&logoColor=white)](https://flask.palletsprojects.com/)
-[![FFmpeg](https://img.shields.io/badge/FFmpeg-Required-orange.svg?logo=ffmpeg&logoColor=white)](https://ffmpeg.org)
-[![License](https://img.shields.io/badge/License-MIT-purple.svg)](LICENSE)
+[![Made with Python](https://forthebadge.com/images/badges/made-with-python.svg)](https://www.python.org)
+[![Built with Love](https://forthebadge.com/images/badges/built-with-love.svg)](https://github.com/ankita1477)
 
-> 🎙️ Transform Audio to Intelligence: Automated Transcription & Summarization
+> Transform Speech to Insights with AI Magic ✨
 
-[Quick Start](#quick-start) • [Features](#features) • [Installation](#installation) • [Documentation](#documentation)
+[Live Demo](http://localhost:5000) • [Documentation](#-documentation) • [Quick Start](#-quick-start) • [API Guide](#-api-guide)
 
-<img src="https://raw.githubusercontent.com/ankita1477/ninjanotes/main/docs/demo.gif" alt="NinjaNotes Demo" width="600px"/>
+<kbd>
+  <img src="docs/demo.png" alt="NinjaNotes Interface" width="800px"/>
+</kbd>
 
 </div>
 
 ---
 
-## ⚡ Quick Start
+<details open>
+<summary>📋 Table of Contents</summary>
 
-```bash
-git clone https://github.com/ankita1477/ninjanotes.git && cd ninjanotes
-python -m venv venv && source venv/bin/activate
-pip install -r requirements.txt && python app.py
+- [🚀 Quick Start](#-quick-start)
+- [✨ Features](#-features)
+- [🛠️ Installation](#️-installation)
+- [📚 Documentation](#-documentation)
+- [🔧 Troubleshooting](#-troubleshooting)
+- [🤝 Contributing](#-contributing)
+
+</details>
+
+## 🎭 Overview
+
+NinjaNotes is your AI-powered audio processing companion that:
+- 🎙️ **Processes** multiple audio formats
+- 📝 **Transcribes** speech with high accuracy
+- ✨ **Summarizes** content intelligently
+- 📊 **Tracks** progress in real-time
+
+<div align="center">
+
+```mermaid
+graph LR
+    A[Audio File] -->|Upload| B[Validation]
+    B -->|Process| C[Transcription]
+    C -->|AI Magic| D[Summary]
+    D -->|Display| E[Results]
+    
+    style A fill:#ff9900
+    style C fill:#00b894
+    style D fill:#0984e3
+    style E fill:#6c5ce7
 ```
 
-🌐 Open [http://localhost:5000](http://localhost:5000)
+</div>
 
-## 🌟 Features
+## ⚡ Quick Start
 
 <table>
 <tr>
-<td width="50%">
+<td>
 
-### 🎙️ Audio Processing
-- Multi-format Support
-  - MP3, WAV, M4A, OGG
-- Real-time Processing
-- Automatic Format Conversion
-- Quality Validation
-
-</td>
-<td width="50%">
-
-### 🤖 AI Capabilities
-- Speech Recognition
-  - 85-95% Accuracy
-  - Noise Handling
-- Smart Summarization
-  - Key Point Extraction
-  - Context Awareness
-
-</td>
-</tr>
-<tr>
-<td width="50%">
-
-### 📊 Progress Tracking
-- Real-time Status Updates
-- Stage-wise Monitoring
-- Error Notifications
-- Process Analytics
-
-</td>
-<td width="50%">
-
-### 🛠️ Developer Features
-- RESTful API
-- Error Handling
-- Progress Streaming
-- Easy Integration
+🔥 **One-Line Setup:**
+```bash
+git clone https://github.com/ankita1477/ninjanotes.git && cd ninjanotes && python -m venv venv && source venv/bin/activate && pip install -r requirements.txt && python app.py
+```
 
 </td>
 </tr>
 </table>
 
-## 📚 Documentation
+## 🎨 Features Matrix
 
-### API Endpoints
+<table>
+<tr>
+<td width="25%" align="center">
 
-| Endpoint | Method | Description | Example |
-|----------|--------|-------------|---------|
-| `/` | GET | Web Interface | [Try It](http://localhost:5000) |
-| `/process` | POST | Process Audio | `curl -F "file=@audio.mp3"` |
-| `/progress` | GET | Track Progress | Server-Sent Events |
-| `/model-status` | GET | AI Status | JSON Response |
+### 🎵 Audio Support
+- MP3
+- WAV
+- M4A
+- OGG
 
-### File Support
+</td>
+<td width="25%" align="center">
 
-```mermaid
-graph LR
-    A[Audio Input] --> B[Validation]
-    B --> C[Processing]
-    C --> D[Output]
-    
-    style A fill:#ff9900,stroke:#fff,stroke-width:2px
-    style B fill:#00b894,stroke:#fff,stroke-width:2px
-    style C fill:#0984e3,stroke:#fff,stroke-width:2px
-    style D fill:#6c5ce7,stroke:#fff,stroke-width:2px
+### 🤖 AI Models
+- Whisper
+- BART
+- Real-time
+
+</td>
+<td width="25%" align="center">
+
+### 📊 Analytics
+- Progress
+- Status
+- Metrics
+
+</td>
+<td width="25%" align="center">
+
+### 🛡️ Security
+- Validation
+- Size Limits
+- Error Handling
+
+</td>
+</tr>
+</table>
+
+## 📚 API Guide
+
+### Endpoints Overview
+
+```javascript
+GET  /              // Web Interface
+POST /process       // Process Audio
+GET  /progress      // Track Status
+GET  /model-status  // AI Status
 ```
 
-## 💻 Installation
+### Example Usage
 
-<details>
-<summary>Click to expand installation steps</summary>
+```bash
+# Upload audio file
+curl -X POST http://localhost:5000/process \
+  -F "file=@your-audio.mp3"
 
-### Prerequisites
-- Python 3.8+
-- FFmpeg
-- 4GB RAM
-- Modern Browser
-
-### Detailed Steps
-See [INSTALLATION.md](INSTALLATION.md)
-</details>
-
-## 🚀 Usage
-
-1. **Start Server**
-   ```bash
-   python app.py
-   ```
-
-2. **Upload Audio**
-   - Drag & drop file
-   - Or click upload button
-   - Supported: MP3, WAV, M4A, OGG
-
-3. **Monitor Progress**
-   - Watch real-time updates
-   - Check processing stages
-   - View final results
-
-## 🔧 Troubleshooting
-
-<details>
-<summary>Common Issues</summary>
-
-| Issue | Quick Fix | Details |
-|-------|-----------|----------|
-| FFmpeg Missing | [Install FFmpeg](INSTALLATION.md#2-install-ffmpeg) | Required for audio processing |
-| Upload Fails | Check file size (<16MB) | Size limit: 16MB |
-| Port Busy | Change port in app.py | Default: 5000 |
-| Memory Error | Free up RAM | Need: 4GB+ |
-
-</details>
-
-## 🤝 Contributing
-
-```mermaid
-graph LR
-    A[Fork] -->|1| B[Branch]
-    B -->|2| C[Changes]
-    C -->|3| D[Test]
-    D -->|4| E[PR]
-    
-    style A fill:#fd79a8,stroke:#fff,stroke-width:2px
-    style E fill:#00b894,stroke:#fff,stroke-width:2px
+# Monitor progress
+curl http://localhost:5000/progress
 ```
 
-## 📄 License
+## 💻 Development
 
-MIT © [ankita1477](https://github.com/ankita1477)
+<table>
+<tr>
+<td width="50%">
 
----
+### 🏗️ Project Structure
+```
+ninjanotes/
+├── app.py          # Core Application
+├── static/         # Assets
+├── templates/      # Views
+├── uploads/        # Storage
+└── models/         # AI Models
+```
+
+</td>
+<td width="50%">
+
+### 🔧 Tech Stack
+- Flask (Backend)
+- Whisper (Speech-to-Text)
+- BART (Summarization)
+- FFmpeg (Audio Processing)
+
+</td>
+</tr>
+</table>
+
+## 🚨 Troubleshooting
+
+<details>
+<summary>Common Issues & Solutions</summary>
+
+| Problem | Solution | Code |
+|---------|----------|------|
+| FFmpeg Missing | Install FFmpeg | `brew install ffmpeg` |
+| Port in Use | Change Port | `app.run(port=5001)` |
+| Memory Error | Increase RAM | `export MAX_MEMORY=8G` |
+
+</details>
+
+## 🌟 Contributing
+
+We welcome contributions! See our [Contributing Guide](CONTRIBUTING.md).
 
 <div align="center">
 
-Made with ❤️ by [ankita1477](https://github.com/ankita1477)
+[![Star History](https://api.star-history.com/svg?repos=ankita1477/ninjanotes&type=Timeline)](https://star-history.com/#ankita1477/ninjanotes&Timeline)
 
-[🔝 Back to Top](#)
+---
+
+Made with 🧡 by [ankita1477](https://github.com/ankita1477)
 
 </div>
