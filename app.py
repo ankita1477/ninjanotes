@@ -11,6 +11,7 @@ import soundfile as sf  # Add this import for audio validation
 import wave
 import contextlib
 from pydub import AudioSegment  # Add this import
+import yt_dlp
 
 # FFmpeg configuration
 FFMPEG_PATH = r"C:\ffmpeg-7.1-essentials_build\bin"
@@ -27,6 +28,10 @@ ALLOWED_EXTENSIONS = {'mp3', 'wav', 'm4a', 'ogg'}
 
 # Create uploads directory if it doesn't exist
 Path(app.config['UPLOAD_FOLDER']).mkdir(parents=True, exist_ok=True)
+
+# Add this after other app configurations
+DOWNLOAD_FOLDER = os.path.join(app.config['UPLOAD_FOLDER'], 'downloads')
+Path(DOWNLOAD_FOLDER).mkdir(parents=True, exist_ok=True)
 
 # Add global progress tracking
 processing_progress = 0
@@ -273,6 +278,54 @@ def process_audio():
         return jsonify({
             'status': 'error',
             'message': error_message
+        }), 500
+
+def get_video_info(url):
+    """Get video information using yt-dlp"""
+    ydl_opts = {
+        'quiet': True,
+        'no_warnings': True,
+        'extract_flat': True
+    }
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            return ydl.extract_info(url, download=False)
+    except Exception as e:
+        raise ValueError(f"Could not fetch video info: {str(e)}")
+
+@app.route('/download-video', methods=['POST'])
+def download_video():
+    """Handle video download requests"""
+    try:
+        url = request.json.get('url')
+        if not url:
+            return jsonify({'status': 'error', 'message': 'No URL provided'}), 400
+
+        # Get video info first
+        video_info = get_video_info(url)
+        
+        # Configure download options
+        output_template = os.path.join(DOWNLOAD_FOLDER, '%(title)s.%(ext)s')
+        ydl_opts = {
+            'format': 'best',  # Best quality
+            'outtmpl': output_template,
+            'restrictfilenames': True,
+        }
+
+        # Download the video
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            ydl.download([url])
+
+        return jsonify({
+            'status': 'success',
+            'message': 'Video downloaded successfully',
+            'title': video_info.get('title', 'Unknown')
+        })
+
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
         }), 500
 
 @app.route('/')
