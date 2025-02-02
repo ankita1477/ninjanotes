@@ -129,28 +129,54 @@
             </div>
 
             <div class="results" id="results" style="display: none;">
-                <div class="result-section">
-                    <h3>Transcript with Speakers <button class="copy-btn" onclick="copyText('transcript')">Copy</button></h3>
-                    <div class="text-content" id="transcript"></div>
+                <div class="tabs">
+                    <button class="tab-btn active" onclick="showTab('transcript')">Transcript</button>
+                    <button class="tab-btn" onclick="showTab('analysis')">Analysis</button>
+                    <button class="tab-btn" onclick="showTab('summary')">Summary</button>
                 </div>
-                
-                <div class="result-section">
-                    <h3>Timeline</h3>
-                    <div class="timeline" id="timeline"></div>
-                </div>
-                
-                <div class="result-section">
-                    <h3>Analysis</h3>
-                    <div class="analysis-grid">
-                        <div class="analysis-card" id="metrics"></div>
-                        <div class="analysis-card" id="sentiment"></div>
-                        <div class="analysis-card" id="keypoints"></div>
+
+                <div id="tab-transcript" class="tab-content active">
+                    <div class="search-bar">
+                        <input type="text" id="searchTranscript" placeholder="Search transcript...">
+                        <button onclick="searchInTranscript()">Search</button>
+                    </div>
+                    <div class="speaker-timeline" id="transcript"></div>
+                    <div class="timeline-controls">
+                        <button class="btn btn-secondary" onclick="exportTranscript('txt')">Export as TXT</button>
+                        <button class="btn btn-secondary" onclick="exportTranscript('srt')">Export as SRT</button>
                     </div>
                 </div>
-                
-                <div class="result-section">
-                    <h3>Summary <button class="copy-btn" onclick="copyText('summary')">Copy</button></h3>
-                    <div class="text-content" id="summary"></div>
+
+                <div id="tab-analysis" class="tab-content">
+                    <div class="analysis-grid">
+                        <div class="analysis-card" id="metrics">
+                            <h4>Speech Metrics</h4>
+                            <div class="metrics-content"></div>
+                        </div>
+                        <div class="analysis-card" id="sentiment">
+                            <h4>Sentiment Analysis</h4>
+                            <div class="sentiment-chart"></div>
+                        </div>
+                        <div class="analysis-card" id="keypoints">
+                            <h4>Key Points</h4>
+                            <ul class="keypoints-list"></ul>
+                        </div>
+                        <div class="analysis-card" id="speakers">
+                            <h4>Speaker Statistics</h4>
+                            <div class="speaker-stats"></div>
+                        </div>
+                    </div>
+                    <div id="wordcloud"></div>
+                </div>
+
+                <div id="tab-summary" class="tab-content">
+                    <div class="summary-card">
+                        <div class="summary-header">
+                            <h3>AI Generated Summary</h3>
+                            <button class="btn btn-primary" onclick="copyText('summary')">Copy</button>
+                        </div>
+                        <div class="summary-content" id="summary"></div>
+                    </div>
                 </div>
             </div>
 
@@ -181,6 +207,67 @@
                     background: white;
                     border-radius: 8px;
                     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                }
+
+                .tabs {
+                    display: flex;
+                    gap: 1rem;
+                    margin-bottom: 1rem;
+                }
+
+                .tab-btn {
+                    padding: 0.75rem 1.5rem;
+                    border: none;
+                    background: none;
+                    cursor: pointer;
+                    border-bottom: 2px solid transparent;
+                }
+
+                .tab-btn.active {
+                    border-bottom-color: var(--primary-color);
+                    color: var(--primary-color);
+                }
+
+                .tab-content {
+                    display: none;
+                }
+
+                .tab-content.active {
+                    display: block;
+                }
+
+                .search-bar {
+                    display: flex;
+                    gap: 0.5rem;
+                    margin-bottom: 1rem;
+                }
+
+                .search-bar input {
+                    flex: 1;
+                    padding: 0.5rem;
+                    border: 1px solid #e2e8f0;
+                    border-radius: 4px;
+                }
+
+                .timeline-controls {
+                    display: flex;
+                    gap: 1rem;
+                    margin-top: 1rem;
+                    justify-content: flex-end;
+                }
+
+                .summary-card {
+                    background: white;
+                    border-radius: 12px;
+                    padding: 1.5rem;
+                    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+                }
+
+                .summary-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 1rem;
                 }
             </style>
         </main>
@@ -429,6 +516,42 @@
                 }
                 processing = false;
             });
+        }
+
+        // Add these functions to your existing JavaScript
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            document.querySelector(`[onclick="showTab('${tabName}')"]`).classList.add('active');
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+        }
+
+        function searchInTranscript() {
+            const searchText = document.getElementById('searchTranscript').value.toLowerCase();
+            const transcriptItems = document.querySelectorAll('.timeline-item');
+            
+            transcriptItems.forEach(item => {
+                const text = item.textContent.toLowerCase();
+                if (text.includes(searchText)) {
+                    item.style.backgroundColor = '#fef3c7';
+                } else {
+                    item.style.backgroundColor = 'white';
+                }
+            });
+        }
+
+        function exportTranscript(format) {
+            const transcript = document.getElementById('transcript').textContent;
+            const blob = new Blob([transcript], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `transcript.${format}`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         }
     </script>
 </body>

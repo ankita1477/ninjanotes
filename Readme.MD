@@ -3,6 +3,23 @@
 # 🎯 NinjaNotes
 > AI-Powered Audio & Video Analysis Assistant
 
+# Table of Contents
+- [🚀 Quick Start](#-quick-start)
+- [🌟 Latest Features](#-latest-features)
+  - [Video Analysis](#-video-analysis)
+  - [Enhanced AI Analysis](#-enhanced-ai-analysis)
+  - [Timeline View](#-timeline-view)
+- [📚 Documentation](#-documentation)
+  - [Installation Guide](INSTALLATION.md)
+  - [API Guide](#-api-guide)
+  - [Troubleshooting](#-troubleshooting)
+- [🛠️ Tech Stack](#-tech-stack)
+- [📈 Analysis Metrics](#-analysis-metrics)
+- [🌟 Project Status](#-project-status)
+- [🔄 Recent Updates](#-recent-updates)
+- [🤝 Contributing](#-contributing)
+- [🆘 Support](#-support)
+
 [![Open Source](https://img.shields.io/badge/Open%20Source-100%25-brightgreen.svg)](LICENSE)
 [![No Paid APIs](https://img.shields.io/badge/No%20Paid%20APIs-✓-success.svg)](AI_MODELS.md)
 [![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)](INSTALLATION.md)
