@@ -3,511 +3,310 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meeting Summarizer Pro</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {
-            background-color: #f8f9fa;
-            color: #212529;
-        }
-        .container {
-            max-width: 800px;
-            padding: 2rem;
-        }
-        .upload-area {
-            background: white;
-            border-radius: 10px;
-            padding: 2rem;
-            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
-            margin-bottom: 2rem;
-        }
-        .result-card {
-            background: white;
-            border-radius: 10px;
-            padding: 1.5rem;
-            margin-bottom: 1rem;
-            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
-            display: none;
-        }
-        .loader {
-            display: none;
-            margin: 1rem 0;
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-        .header h1 {
-            color: #2c3e50;
-            font-weight: 600;
-        }
-        .supported-formats {
-            font-size: 0.9rem;
-            color: #6c757d;
-            margin-top: 0.5rem;
-        }
-    </style>
+    <title>NinjaNotes - Audio to Summary</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>Meeting Summarizer Pro</h1>
-            <p class="text-muted">Transform your audio meetings into actionable summaries</p>
-        </div>
+        <header>
+            <h1>NinjaNotes</h1>
+            <p>Smart Audio Transcription & Summarization</p>
+        </header>
 
-        <div class="upload-area">
-            <form id="uploadForm" class="text-center">
-                <div class="mb-4">
-                    <input type="file" 
-                           class="form-control" 
-                           accept=".mp3,.wav,.m4a,.ogg" 
-                           required>
-                    <div class="supported-formats">
-                        Supported formats: MP3, WAV, M4A, OGG
+        <main>
+            <div class="workflow">
+                <div class="workflow-step">
+                    <div class="step-icon">🎤</div>
+                    <h4>1. Upload Audio</h4>
+                    <p>Upload any audio file (MP3, WAV, M4A, OGG)</p>
+                </div>
+                <div class="workflow-arrow">➡️</div>
+                <div class="workflow-step">
+                    <div class="step-icon">📝</div>
+                    <h4>2. Transcription</h4>
+                    <p>AI converts speech to text</p>
+                </div>
+                <div class="workflow-arrow">➡️</div>
+                <div class="workflow-step">
+                    <div class="step-icon">📊</div>
+                    <h4>3. Analysis</h4>
+                    <p>Processing and analyzing text</p>
+                </div>
+                <div class="workflow-arrow">➡️</div>
+                <div class="workflow-step">
+                    <div class="step-icon">📋</div>
+                    <h4>4. Summary</h4>
+                    <p>Get transcript and smart summary</p>
+                </div>
+            </div>
+
+            <div class="models-info">
+                <div class="model-pipeline">
+                    <div class="pipeline-stage" id="stage-input">
+                        <span class="stage-icon">🎤</span>
+                        <span class="stage-name">Input</span>
+                        <div class="stage-status"></div>
+                    </div>
+                    <div class="pipeline-arrow">→</div>
+                    <div class="pipeline-stage" id="stage-whisper">
+                        <span class="stage-icon">🔊</span>
+                        <span class="stage-name">Whisper</span>
+                        <div class="stage-status"></div>
+                    </div>
+                    <div class="pipeline-arrow">→</div>
+                    <div class="pipeline-stage" id="stage-bart">
+                        <span class="stage-icon">📝</span>
+                        <span class="stage-name">BART</span>
+                        <div class="stage-status"></div>
+                    </div>
+                    <div class="pipeline-arrow">→</div>
+                    <div class="pipeline-stage" id="stage-output">
+                        <span class="stage-icon">✨</span>
+                        <span class="stage-name">Output</span>
+                        <div class="stage-status"></div>
                     </div>
                 </div>
-                <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-file-earmark-text"></i> Process Audio
+            </div>
+
+            <div class="upload-container" id="dropZone">
+                <div class="upload-icon">📁</div>
+                <h3>Upload Your Audio</h3>
+                <p>Drag and drop your audio file here, or click to browse</p>
+                <input type="file" id="fileInput" accept=".mp3,.wav,.m4a,.ogg" hidden>
+                <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                    Browse Files
                 </button>
-            </form>
-
-            <div class="loader text-center">
-                <div class="progress mb-3" style="display: none;">
-                    <div class="progress-bar progress-bar-striped progress-bar-animated" 
-                         role="progressbar" 
-                         style="width: 0%" 
-                         id="processProgress">0%</div>
-                </div>
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
-                <p class="mt-2" id="processStatus">Processing your audio file...</p>
             </div>
 
-            <div class="alert alert-danger mt-3" id="errorBox" style="display:none">
+            <div class="processing-status" id="status" style="display: none;">
+                <div class="progress-container">
+                    <div class="progress-bar" id="progressBar"></div>
+                </div>
+                <p id="statusText">Processing...</p>
+                <div class="loader"></div>
             </div>
-        </div>
 
-        <div class="quick-record-area mb-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">📱 Quick Recording</h5>
-                    <p class="card-text">Start recording instantly without joining a meeting.</p>
-                    <div class="mb-3">
-                        <button class="btn btn-secondary mb-2" onclick="testMicrophone()">
-                            🎤 Test Microphone
-                        </button>
-                        <div class="progress mb-2" style="height: 20px; display: none;" id="micLevel">
-                            <div class="progress-bar bg-success" role="progressbar" style="width: 0%">
-                                Audio Level
-                            </div>
-                        </div>
-                        <div id="micStatus" class="alert" style="display: none;"></div>
-                    </div>
-                    <div class="d-flex gap-2">
-                        <button class="btn btn-primary" onclick="startAutoRecord()">Start Recording</button>
-                        <button class="btn btn-danger" onclick="stopAutoRecord()">Stop Recording</button>
-                    </div>
-                    <div id="recordingStatus" class="alert mt-3" style="display: none;"></div>
+            <div class="results" id="results" style="display: none;">
+                <div class="result-section">
+                    <h3>Transcript <button class="copy-btn" onclick="copyText('transcript')">Copy</button></h3>
+                    <div class="text-content" id="transcript"></div>
+                </div>
+                
+                <div class="result-section">
+                    <h3>Summary <button class="copy-btn" onclick="copyText('summary')">Copy</button></h3>
+                    <div class="text-content" id="summary"></div>
                 </div>
             </div>
-        </div>
-
-        <div class="result-card" id="transcriptBox">
-            <h3 class="mb-3">📝 Transcript</h3>
-            <div id="transcript" class="border-start border-4 border-primary ps-3">
-            </div>
-        </div>
-
-        <div class="result-card" id="summaryBox">
-            <h3 class="mb-3">✨ Summary</h3>
-            <div id="summary" class="border-start border-4 border-success ps-3">
-            </div>
-        </div>
-
-        <div class="result-card" id="meetMonitorBox">
-            <h3 class="mb-3">📹 Google Meet Monitor</h3>
-            <div id="meet-controls" class="text-center mb-3">
-                <input type="text" 
-                       id="meet-link" 
-                       class="form-control mb-2" 
-                       placeholder="Enter Google Meet Link (e.g., https://meet.google.com/xxx-yyyy-zzz)">
-                <button class="btn btn-success me-2" onclick="joinMeet()">Join & Record</button>
-                <button class="btn btn-danger" onclick="leaveMeet()">Leave Meeting</button>
-            </div>
-            <div id="status" class="alert alert-info" style="display: none;"></div>
-        </div>
-
-        <div class="result-card" id="analysisBox">
-            <h3 class="mb-3">🔍 Enhanced Analysis</h3>
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="card mb-3">
-                        <div class="card-body">
-                            <h5 class="card-title">Meeting Sentiment</h5>
-                            <div id="sentiment"></div>
-                        </div>
-                    </div>
-                    <div class="card mb-3">
-                        <div class="card-body">
-                            <h5 class="card-title">Meeting Type</h5>
-                            <div id="meetingType"></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="card mb-3">
-                        <div class="card-body">
-                            <h5 class="card-title">Action Items</h5>
-                            <ul id="actionItems" class="list-group list-group-flush"></ul>
-                        </div>
-                    </div>
-                    <div class="card mb-3">
-                        <div class="card-body">
-                            <h5 class="card-title">Participants</h5>
-                            <div id="speakers" class="d-flex flex-wrap gap-2"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        </main>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <div id="toast" class="toast"></div>
+
     <script>
-        document.getElementById('uploadForm').onsubmit = async (e) => {
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const status = document.getElementById('status');
+        const results = document.getElementById('results');
+
+        let progressEventSource = null;
+
+        // Drag and drop handling
+        dropZone.addEventListener('dragover', (e) => {
             e.preventDefault();
-            const errorBox = document.getElementById('errorBox');
-            const loader = document.querySelector('.loader');
-            const progress = document.querySelector('.progress');
-            const progressBar = document.getElementById('processProgress');
-            const statusText = document.getElementById('processStatus');
-            const transcriptBox = document.getElementById('transcriptBox');
-            const summaryBox = document.getElementById('summaryBox');
-            const submitButton = e.target.querySelector('button');
-            
-            // Reset UI
-            errorBox.style.display = 'none';
-            transcriptBox.style.display = 'none';
-            summaryBox.style.display = 'none';
-            loader.style.display = 'block';
-            progress.style.display = 'block';
-            progressBar.style.width = '0%';
-            progressBar.textContent = '0%';
-            submitButton.disabled = true;
-            
-            try {
-                const formData = new FormData();
-                formData.append('file', e.target[0].files[0]);
-                
-                // Set up SSE for progress updates
-                const eventSource = new EventSource('/progress');
-                eventSource.onmessage = (event) => {
-                    const data = JSON.parse(event.data);
-                    progressBar.style.width = `${data.progress}%`;
-                    progressBar.textContent = `${data.progress}%`;
-                    statusText.textContent = data.status;
-                    
-                    if (data.progress === 100) {
-                        eventSource.close();
-                    }
-                };
-                
-                const response = await fetch('/process', {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                const data = await response.json();
-                eventSource.close();
-                
-                if (data.error) {
-                    errorBox.textContent = data.error;
-                    errorBox.style.display = 'block';
-                    return;
-                }
-                
-                document.getElementById('transcript').textContent = data.transcript;
-                document.getElementById('summary').textContent = data.summary;
-                transcriptBox.style.display = 'block';
-                summaryBox.style.display = 'block';
+            dropZone.classList.add('drag-over');
+        });
 
-                if (data.analysis) {
-                    // Display enhanced analysis
-                    document.getElementById('analysisBox').style.display = 'block';
-                    
-                    // Show sentiment
-                    const sentimentDiv = document.getElementById('sentiment');
-                    sentimentDiv.innerHTML = `
-                        <div class="alert alert-${data.analysis.sentiment.label === 'POSITIVE' ? 'success' : 'warning'}">
-                            ${data.analysis.sentiment.label} (${Math.round(data.analysis.sentiment.score * 100)}% confidence)
-                        </div>
-                    `;
-                    
-                    // Show meeting type
-                    document.getElementById('meetingType').textContent = 
-                        `${data.analysis.meeting_type.type} (${Math.round(data.analysis.meeting_type.confidence * 100)}% confidence)`;
-                    
-                    // Show action items
-                    const actionList = document.getElementById('actionItems');
-                    actionList.innerHTML = data.analysis.action_items
-                        .map(item => `<li class="list-group-item">🎯 ${item}</li>`)
-                        .join('');
-                    
-                    // Show speakers
-                    const speakersDiv = document.getElementById('speakers');
-                    speakersDiv.innerHTML = data.analysis.speakers
-                        .map(speaker => `<span class="badge bg-primary">${speaker}</span>`)
-                        .join('');
-                }
-            } catch (error) {
-                errorBox.textContent = 'An error occurred while processing the audio.';
-                errorBox.style.display = 'block';
-            } finally {
-                loader.style.display = 'none';
-                progress.style.display = 'none';
-                submitButton.disabled = false;
-            }
-        };
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('drag-over');
+        });
 
-        function joinMeet() {
-            const meetLink = document.getElementById('meet-link').value;
-            const statusDiv = document.getElementById('status');
-            
-            if (!meetLink) {
-                showStatus('Please enter a valid Meet link', 'danger');
-                return;
-            }
-
-            fetch('/join-meet', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({meet_link: meetLink}),
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    showStatus(data.error, 'danger');
-                } else {
-                    showStatus('Successfully joined meeting and started recording', 'success');
-                }
-            })
-            .catch(error => showStatus('Failed to join meeting', 'danger'));
-        }
-
-        function leaveMeet() {
-            fetch('/leave-meet', {
-                method: 'POST',
-            })
-            .then(response => response.json())
-            .then(data => {
-                showStatus('Left meeting and stopped recording', 'info');
-            })
-            .catch(error => showStatus('Error leaving meeting', 'danger'));
-        }
-
-        function showStatus(message, type) {
-            const statusDiv = document.getElementById('status');
-            statusDiv.className = `alert alert-${type}`;
-            statusDiv.textContent = message;
-            statusDiv.style.display = 'block';
-        }
-
-        async function checkPermissions() {
-            try {
-                // Check browser media permissions
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                stream.getTracks().forEach(track => track.stop());
-                
-                // Check backend audio devices
-                const response = await fetch('/check-permissions');
-                const data = await response.json();
-                
-                if (!data.devices_ok) {
-                    throw new Error(data.message);
-                }
-                
-                // Test microphone
-                const micResponse = await fetch('/test-mic', { method: 'POST' });
-                const micData = await micResponse.json();
-                
-                if (!micData.working) {
-                    throw new Error('Microphone not detecting audio');
-                }
-                
-                return true;
-            } catch (error) {
-                console.error('Permission check failed:', error);
-                const statusDiv = document.getElementById('recordingStatus');
-                statusDiv.className = 'alert alert-danger mt-3';
-                statusDiv.textContent = `Please grant microphone permissions and ensure audio device is connected: ${error.message}`;
-                statusDiv.style.display = 'block';
-                return false;
-            }
-        }
-
-        async function startAutoRecord() {
-            const statusDiv = document.getElementById('recordingStatus');
-            statusDiv.className = 'alert alert-info mt-3';
-            statusDiv.textContent = 'Checking permissions...';
-            statusDiv.style.display = 'block';
-
-            // Check permissions first
-            if (!await checkPermissions()) {
-                return;
-            }
-
-            statusDiv.textContent = 'Starting recording...';
-
-            fetch('/auto-record', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ action: 'start' })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    statusDiv.className = 'alert alert-success mt-3';
-                    statusDiv.textContent = '🎙️ Recording in progress...';
-                } else {
-                    statusDiv.className = 'alert alert-danger mt-3';
-                    statusDiv.textContent = data.message;
-                }
-            })
-            .catch(error => {
-                statusDiv.className = 'alert alert-danger mt-3';
-                statusDiv.textContent = 'Failed to start recording';
-            });
-        }
-
-        function stopAutoRecord() {
-            const statusDiv = document.getElementById('recordingStatus');
-            statusDiv.className = 'alert alert-info mt-3';
-            statusDiv.textContent = 'Stopping recording...';
-
-            fetch('/auto-record', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ action: 'stop' })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    statusDiv.className = 'alert alert-info mt-3';
-                    statusDiv.textContent = '✅ Recording processed successfully';
-                    
-                    // Display results
-                    if (data.data) {
-                        document.getElementById('transcript').textContent = data.data.transcript;
-                        document.getElementById('summary').textContent = data.data.summary;
-                        document.getElementById('transcriptBox').style.display = 'block';
-                        document.getElementById('summaryBox').style.display = 'block';
-                        
-                        if (data.data.analysis) {
-                            displayAnalysis(data.data.analysis);
-                        }
-                    }
-                } else {
-                    statusDiv.className = 'alert alert-danger mt-3';
-                    statusDiv.textContent = data.message;
-                }
-            })
-            .catch(error => {
-                statusDiv.className = 'alert alert-danger mt-3';
-                statusDiv.textContent = 'Failed to stop recording';
-            });
-        }
-
-        function displayAnalysis(analysis) {
-            document.getElementById('analysisBox').style.display = 'block';
-            
-            // Show sentiment
-            const sentimentDiv = document.getElementById('sentiment');
-            sentimentDiv.innerHTML = `
-                <div class="alert alert-${analysis.sentiment.label === 'POSITIVE' ? 'success' : 'warning'}">
-                    ${analysis.sentiment.label} (${Math.round(analysis.sentiment.score * 100)}% confidence)
-                </div>
-            `;
-            
-            // Show meeting type
-            document.getElementById('meetingType').textContent = 
-                `${analysis.meeting_type.type} (${Math.round(analysis.meeting_type.confidence * 100)}% confidence)`;
-            
-            // Show action items
-            const actionList = document.getElementById('actionItems');
-            actionList.innerHTML = analysis.action_items
-                .map(item => `<li class="list-group-item">🎯 ${item}</li>`)
-                .join('');
-            
-            // Show speakers
-            const speakersDiv = document.getElementById('speakers');
-            speakersDiv.innerHTML = analysis.speakers
-                .map(speaker => `<span class="badge bg-primary">${speaker}</span>`)
-                .join('');
-        }
-
-        async function testMicrophone() {
-            const micLevel = document.getElementById('micLevel');
-            const micStatus = document.getElementById('micStatus');
-            const testButton = document.querySelector('button[onclick="testMicrophone()"]');
-            
-            try {
-                // Request microphone permission first
-                await navigator.mediaDevices.getUserMedia({ audio: true });
-                
-                testButton.disabled = true;
-                micStatus.className = 'alert alert-info';
-                micStatus.textContent = 'Testing microphone... Please speak';
-                micStatus.style.display = 'block';
-                micLevel.style.display = 'block';
-                
-                const response = await fetch('/test-mic', { method: 'POST' });
-                const data = await response.json();
-                
-                if (data.status === 'success') {
-                    // Update level indicator
-                    const levelPercent = Math.min(100, Math.max(0, data.level * 5));
-                    micLevel.querySelector('.progress-bar').style.width = `${levelPercent}%`;
-                    micLevel.querySelector('.progress-bar').textContent = 
-                        `Audio Level: ${Math.round(levelPercent)}%`;
-                    
-                    // Update status
-                    micStatus.className = `alert alert-${data.working ? 'success' : 'warning'}`;
-                    micStatus.textContent = data.message;
-                } else {
-                    micStatus.className = 'alert alert-danger';
-                    micStatus.textContent = data.message;
-                }
-            } catch (error) {
-                micStatus.className = 'alert alert-danger';
-                micStatus.textContent = 'Microphone access denied or not available';
-                micLevel.style.display = 'none';
-            } finally {
-                testButton.disabled = false;
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', async () => {
-            const quickRecordArea = document.querySelector('.quick-record-area');
-            const startButton = quickRecordArea.querySelector('button');
-            
-            try {
-                if (await checkPermissions()) {
-                    startButton.disabled = false;
-                } else {
-                    startButton.disabled = true;
-                }
-            } catch (error) {
-                console.error('Initial permission check failed:', error);
-                startButton.disabled = true;
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            const files = e.dataTransfer.files;
+            if (files.length) {
+                processFile(files[0]);
             }
         });
+
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length) {
+                processFile(fileInput.files[0]);
+            }
+        });
+
+        function startProgressTracking() {
+            progressEventSource = new EventSource('/progress');
+            progressEventSource.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                document.getElementById('progressBar').style.width = `${data.progress}%`;
+                document.getElementById('statusText').textContent = data.message;
+                
+                // Update flow chart based on progress
+                if (data.progress < 25) {
+                    updateProcessingFlow('input');
+                } else if (data.progress < 60) {
+                    updateProcessingFlow('whisper');
+                } else if (data.progress < 90) {
+                    updateProcessingFlow('bart');
+                } else {
+                    updateProcessingFlow('output');
+                }
+                
+                if (data.progress >= 100) {
+                    progressEventSource.close();
+                }
+            };
+        }
+
+        function showToast(message, type = 'error') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type}`;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function processFile(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            // Show processing status
+            status.style.display = 'block';
+            results.style.display = 'none';
+            dropZone.style.display = 'none';
+
+            // Start progress tracking
+            startProgressTracking();
+
+            fetch('/process', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    document.getElementById('transcript').textContent = data.transcript;
+                    document.getElementById('summary').textContent = data.summary;
+                    results.style.display = 'block';
+                    showToast('Processing complete!', 'success');
+                } else {
+                    showToast(data.message);
+                    dropZone.style.display = 'block';
+                }
+            })
+            .catch(error => {
+                showToast('Error processing file. Please try again.');
+                dropZone.style.display = 'block';
+            })
+            .finally(() => {
+                status.style.display = 'none';
+                if (progressEventSource) {
+                    progressEventSource.close();
+                }
+            });
+        }
+
+        function copyText(elementId) {
+            const text = document.getElementById(elementId).textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = event.target;
+                btn.textContent = 'Copied!';
+                setTimeout(() => btn.textContent = 'Copy', 2000);
+            });
+        }
+
+        function updateProcessingFlow(stage) {
+            // Reset all stages
+            document.querySelectorAll('.model-node').forEach(node => {
+                node.classList.remove('active', 'completed');
+            });
+            
+            const stages = ['input', 'whisper', 'bart', 'output'];
+            const currentIndex = stages.indexOf(stage);
+            
+            // Update stages based on current progress
+            stages.forEach((s, index) => {
+                const stageElement = document.querySelector(`#stage-${s} .model-node`);
+                if (index < currentIndex) {
+                    stageElement.classList.add('completed');
+                } else if (index === currentIndex) {
+                    stageElement.classList.add('active');
+                }
+            });
+        }
+
+        function updateModelStatus() {
+            fetch('/model-status')
+                .then(response => response.json())
+                .then(data => {
+                    Object.entries(data.stages).forEach(([stage, info]) => {
+                        const stageElement = document.getElementById(`stage-${stage}`);
+                        stageElement.className = `pipeline-stage ${info.status}`;
+                        stageElement.querySelector('.stage-status').textContent = info.details;
+                    });
+                });
+        }
+
+        // Update model status during processing
+        function startStatusPolling() {
+            const statusInterval = setInterval(() => {
+                if (processing) {
+                    updateModelStatus();
+                } else {
+                    clearInterval(statusInterval);
+                }
+            }, 1000);
+        }
+
+        // Update processFile function
+        function processFile(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            // Show processing status
+            status.style.display = 'block';
+            results.style.display = 'none';
+            dropZone.style.display = 'none';
+
+            // Start progress tracking
+            startProgressTracking();
+
+            // Start status polling
+            processing = true;
+            startStatusPolling();
+
+            fetch('/process', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    document.getElementById('transcript').textContent = data.transcript;
+                    document.getElementById('summary').textContent = data.summary;
+                    results.style.display = 'block';
+                    showToast('Processing complete!', 'success');
+                } else {
+                    showToast(data.message);
+                    dropZone.style.display = 'block';
+                }
+            })
+            .catch(error => {
+                showToast('Error processing file. Please try again.');
+                dropZone.style.display = 'block';
+            })
+            .finally(() => {
+                status.style.display = 'none';
+                if (progressEventSource) {
+                    progressEventSource.close();
+                }
+                processing = false;
+            });
+        }
     </script>
 </body>
 </html>
