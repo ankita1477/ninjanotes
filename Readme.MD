@@ -144,8 +144,6 @@ python app.py
 
 ## 🎨 Features Matrix
 
-<link rel="stylesheet" href="static/css/style.css">
-
 <div class="feature-grid">
   <div class="feature-card">
     <img src="docs/audio-wave.gif" alt="Audio Support"/>
@@ -177,38 +175,6 @@ python app.py
     </ul>
   </div>
 </div>
-
-<style>
-.feature-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-  margin: 20px 0;
-}
-
-.feature-card {
-  border: 1px solid #eee;
-  border-radius: 8px;
-  padding: 15px;
-  text-align: center;
-  transition: transform 0.3s;
-}
-
-.feature-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-}
-
-@keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
-}
-
-.feature-card img {
-  animation: pulse 2s infinite;
-}
-</style>
 
 ## 🚀 How It Works
 
