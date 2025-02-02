@@ -1,91 +1,163 @@
+<div align="center">
 
 # 🏗️ NinjaNotes Architecture
+> Technical Design & System Architecture
 
-## System Architecture
+![Architecture](docs/architecture.png)
 
-### Overview
-NinjaNotes is an AI-powered meeting assistant that automates the process of joining, recording, transcribing, and summarizing Google Meet sessions. The system leverages various AI/ML models and tools to achieve its functionality.
+</div>
 
-### Components
-1. **Frontend**: The user interface built with HTML, CSS, and JavaScript, providing an intuitive way for users to interact with the system.
-2. **Backend**: A Flask-based server that handles requests, processes audio files, and manages interactions with Google Meet.
-3. **AI Models**: 
-   - **OpenAI Whisper**: For speech-to-text transcription.
-   - **Facebook BART**: For text summarization.
-4. **Google Meet Integration**: Uses Playwright for browser automation to join and record meetings.
-5. **FFmpeg**: For audio processing and conversion.
+## 🔍 System Overview
 
-### Flow Chart
 ```mermaid
-graph TD;
-    A[User] -->|Upload Audio| B[Frontend];
-    B -->|Send Request| C[Backend];
-    C -->|Process Audio| D[FFmpeg];
-    D -->|Transcribe| E[OpenAI Whisper];
-    E -->|Generate Transcript| F[Backend];
-    F -->|Summarize| G[Facebook BART];
-    G -->|Send Response| H[Frontend];
-    H -->|Display Results| A;
+graph TD
+    Client[Client Browser] -->|HTTP| Server[Flask Server]
+    Server -->|Audio| AudioProcessor[Audio Processor]
+    Server -->|Text| AIModels[AI Models]
+    
+    subgraph Processing
+        AudioProcessor -->|Validation| FFmpeg[FFmpeg]
+        AudioProcessor -->|Conversion| FFmpeg
+    end
+    
+    subgraph AI Pipeline
+        AIModels -->|Speech to Text| Whisper[OpenAI Whisper]
+        AIModels -->|Summarization| BART[Facebook BART]
+    end
+    
+    FFmpeg -->|Processed Audio| Whisper
+    Whisper -->|Transcript| BART
+    BART -->|Summary| Server
+    Server -->|Results| Client
 ```
 
-### Detailed Architecture
-```mermaid
-graph TD;
-    subgraph Frontend
-        A1[HTML/CSS/JS]
-        A2[Bootstrap]
-    end
-    subgraph Backend
-        B1[Flask]
-        B2[API Endpoints]
-        B3[File Handling]
-    end
-    subgraph AI_Models
-        C1[OpenAI Whisper]
-        C2[Facebook BART]
-    end
-    subgraph Google_Meet_Integration
-        D1[Playwright]
-        D2[Browser Automation]
-    end
-    subgraph Audio_Processing
-        E1[FFmpeg]
-    end
+## 🧱 Core Components
 
-    A1 --> B1
-    A2 --> B1
-    B1 --> B2
-    B2 --> B3
-    B3 --> E1
-    E1 --> C1
-    C1 --> C2
-    C2 --> B1
-    B1 --> D1
-    D1 --> D2
+### 1. Frontend Layer
+- **Web Interface**: HTML5, CSS3, JavaScript
+- **Real-time Updates**: Server-Sent Events (SSE)
+- **Progress Tracking**: Dynamic status updates
+- **Responsive Design**: Mobile-friendly layout
+
+### 2. Backend Server
+- **Framework**: Flask 2.0+
+- **Routing**: RESTful API endpoints
+- **File Handling**: Secure upload management
+- **Error Handling**: Comprehensive error capture
+
+### 3. Audio Processing
+- **Tool**: FFmpeg
+- **Operations**:
+  - Format validation
+  - Audio conversion
+  - Quality checks
+  - Size management
+
+### 4. AI Models
+- **Speech Recognition**:
+  ```python
+  model = whisper.load_model("base")
+  result = model.transcribe(audio_file)
+  ```
+- **Summarization**:
+  ```python
+  summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
+  summary = summarizer(text, max_length=130)
+  ```
+
+## 📡 Data Flow
+
+1. **Input Stage**
+   ```
+   Client → Upload → Validation → Storage
+   ```
+
+2. **Processing Stage**
+   ```
+   Audio → FFmpeg → Whisper → Text
+   ```
+
+3. **AI Stage**
+   ```
+   Text → BART → Summary
+   ```
+
+4. **Output Stage**
+   ```
+   Results → Client → Display
+   ```
+
+## 🔐 Security Measures
+
+- File validation
+- Size limits
+- Format checks
+- Error handling
+- Secure file storage
+
+## 💾 Storage Management
+
+```
+uploads/
+├── temp/           # Temporary storage
+├── processed/      # Processed files
+└── archive/       # Backup storage
 ```
 
-### Data Flow
-1. **User Interaction**: The user uploads an audio file or provides a Google Meet link via the frontend interface.
-2. **Request Handling**: The frontend sends the request to the backend server.
-3. **Audio Processing**: The backend uses FFmpeg to process the audio file.
-4. **Transcription**: The processed audio is transcribed using the OpenAI Whisper model.
-5. **Summarization**: The transcript is summarized using the Facebook BART model.
-6. **Response**: The backend sends the transcript and summary back to the frontend.
-7. **Display**: The frontend displays the results to the user.
+## 📊 Performance
 
-### Technologies Used
-- **Flask**: Web framework for the backend.
-- **Playwright**: Browser automation for Google Meet integration.
-- **Whisper**: Speech-to-text model for transcription.
-- **BART**: Text summarization model.
-- **Bootstrap**: UI styling for the frontend.
-- **FFmpeg**: Audio processing tool.
+| Component | Average Time | Memory Usage |
+|-----------|--------------|--------------|
+| Upload | 1-2s | Variable |
+| FFmpeg | 2-3s | ~100MB |
+| Whisper | 10-15s | ~1GB |
+| BART | 2-3s | ~1.5GB |
 
-### Deployment
-- **Local Environment**: The application can be run locally for development and testing.
-- **Production Environment**: The application can be deployed on a cloud platform for production use.
+## 🔄 Workflow
 
-### Future Enhancements
-- **Real-time Transcription**: Implement real-time transcription for live meetings.
-- **Multi-language Support**: Extend support for multiple languages in transcription and summarization.
-- **Advanced Analytics**: Provide advanced analytics and insights from meeting transcripts.
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant S as Server
+    participant F as FFmpeg
+    participant W as Whisper
+    participant B as BART
+
+    C->>S: Upload Audio
+    S->>F: Process Audio
+    F->>W: Convert Speech
+    W->>B: Generate Summary
+    B->>S: Return Results
+    S->>C: Display Output
+```
+
+## 🛠️ Technical Requirements
+
+- Python 3.8+
+- FFmpeg
+- 4GB RAM
+- CUDA (optional)
+- Modern web browser
+
+## 📈 Scalability
+
+- Modular design
+- Async processing
+- Queue management
+- Resource optimization
+
+## 🔮 Future Architecture
+
+```mermaid
+graph LR
+    A[Current] -->|Upgrade| B[Future]
+    B --> C[Real-time]
+    B --> D[Cloud]
+    B --> E[API]
+```
+
+## 📚 Documentation
+
+- [API Guide](API.md)
+- [Model Details](AI_MODELS.md)
+- [Setup Guide](INSTALLATION.md)

@@ -263,6 +263,7 @@ ninjanotes/
 ## 📚 Documentation
 
 - [Installation Guide](INSTALLATION.md)
+- [Architecture Details](ARCHITECTURE.md)
 - [AI Models](AI_MODELS.md)
 - [API Documentation](API.md)
 - [Contributing Guide](CONTRIBUTING.md)
