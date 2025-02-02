@@ -62,12 +62,13 @@ mkdir uploads
 ```
 
 ### 4. Configuration
-1. Copy `.env.example` to `.env`
-2. Add your API keys:
+1. Create `.env` file in project root (optional - currently using hardcoded token)
+2. Add your Hugging Face API token:
+```bash
+HUGGINGFACE_API_KEY=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
 ```
-OPENAI_API_KEY=your_key_here
-HUGGINGFACE_API_KEY=your_key_here
-```
+
+Note: The API token is currently hardcoded in app.py. You can optionally use the .env file for better security.
 
 ### 5. Run Application
 ```bash
