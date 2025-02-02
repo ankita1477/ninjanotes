@@ -54,20 +54,37 @@ graph LR
 
 </div>
 
-## ⚡ Quick Start
+## ⚡ SETUP IN 3 STEPS
 
 <table>
 <tr>
-<td>
+<td width="33%" align="center">
 
-🔥 **One-Line Setup:**
+### 1. Prerequisites
+- Python 3.8+
+- FFmpeg
+- Git
+
+</td>
+<td width="33%" align="center">
+
+### 2. One-Line Install
 ```bash
 git clone https://github.com/ankita1477/ninjanotes.git && cd ninjanotes && python -m venv venv && source venv/bin/activate && pip install -r requirements.txt && python app.py
 ```
 
 </td>
+<td width="33%" align="center">
+
+### 3. Verify
+Open in browser:
+http://localhost:5000
+
+</td>
 </tr>
 </table>
+
+[📚 Detailed Setup Guide](SETUP.md) • [🔧 Troubleshooting](SETUP.md#-troubleshooting)
 
 ## 🎨 Features Matrix
 
