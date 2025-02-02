@@ -7,6 +7,40 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/features.css') }}">
+    <style>
+        /* Add custom styles for the video URL form */
+        #videoForm {
+            margin-top: 20px;
+            padding: 20px;
+            border: 2px solid #ccc;
+            border-radius: 10px;
+            background-color: #f9f9f9;
+            text-align: center;
+        }
+        #videoForm label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+        #videoForm input {
+            width: 80%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        #videoForm button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #videoForm button:hover {
+            background-color: #0056b3;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -79,6 +113,12 @@
                     Browse Files
                 </button>
             </div>
+
+            <form id="videoForm" onsubmit="event.preventDefault(); processVideo();">
+                <label for="videoUrl">Video URL:</label>
+                <input type="text" id="videoUrl" required />
+                <button type="submit">Download & Process</button>
+            </form>
 
             <div class="processing-status" id="status" style="display: none;">
                 <div class="progress-container">
@@ -306,6 +346,28 @@
                     progressEventSource.close();
                 }
                 processing = false;
+            });
+        }
+
+        function processVideo() {
+            const url = document.getElementById('videoUrl').value;
+            fetch('/download-video', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ video_url: url })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.status === 'success') {
+                    document.getElementById('transcript').textContent = data.transcript;
+                    document.getElementById('summary').textContent = data.summary;
+                    document.getElementById('results').style.display = 'block';
+                } else {
+                    showToast(data.message);
+                }
+            })
+            .catch(() => {
+                showToast('Error downloading video.');
             });
         }
     </script>

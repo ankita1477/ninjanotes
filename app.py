@@ -11,7 +11,8 @@ import soundfile as sf  # Add this import for audio validation
 import wave
 import contextlib
 from pydub import AudioSegment  # Add this import
-import yt_dlp
+from pytube import YouTube  # Add import
+import yt_dlp  # Add this import for universal video downloading
 
 # FFmpeg configuration
 FFMPEG_PATH = r"C:\ffmpeg-7.1-essentials_build\bin"
@@ -28,10 +29,6 @@ ALLOWED_EXTENSIONS = {'mp3', 'wav', 'm4a', 'ogg'}
 
 # Create uploads directory if it doesn't exist
 Path(app.config['UPLOAD_FOLDER']).mkdir(parents=True, exist_ok=True)
-
-# Add this after other app configurations
-DOWNLOAD_FOLDER = os.path.join(app.config['UPLOAD_FOLDER'], 'downloads')
-Path(DOWNLOAD_FOLDER).mkdir(parents=True, exist_ok=True)
 
 # Add global progress tracking
 processing_progress = 0
@@ -280,53 +277,98 @@ def process_audio():
             'message': error_message
         }), 500
 
-def get_video_info(url):
-    """Get video information using yt-dlp"""
-    ydl_opts = {
-        'quiet': True,
-        'no_warnings': True,
-        'extract_flat': True
-    }
-    try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            return ydl.extract_info(url, download=False)
-    except Exception as e:
-        raise ValueError(f"Could not fetch video info: {str(e)}")
-
 @app.route('/download-video', methods=['POST'])
 def download_video():
-    """Handle video download requests"""
+    global processing_progress, model_status
+    data = request.get_json()
+    video_url = data.get('video_url')
+    if not video_url:
+        return jsonify({'status': 'error', 'message': 'No video URL provided'}), 400
+    
+    processing_progress = 10
+    update_model_status('input', 'processing', 'Downloading video...')
+    
     try:
-        url = request.json.get('url')
-        if not url:
-            return jsonify({'status': 'error', 'message': 'No URL provided'}), 400
-
-        # Get video info first
-        video_info = get_video_info(url)
+        # Create unique filename using timestamp
+        timestamp = int(time.time())
+        base_filename = f"video_{timestamp}"
+        video_path = os.path.join(app.config['UPLOAD_FOLDER'], f"{base_filename}.mp4")
+        audio_path = os.path.join(app.config['UPLOAD_FOLDER'], f"{base_filename}.wav")
         
-        # Configure download options
-        output_template = os.path.join(DOWNLOAD_FOLDER, '%(title)s.%(ext)s')
+        # Configure yt-dlp
         ydl_opts = {
-            'format': 'best',  # Best quality
-            'outtmpl': output_template,
-            'restrictfilenames': True,
+            'format': 'mp4',  # Specify mp4 format
+            'outtmpl': video_path,
+            'quiet': True,
+            'no_warnings': True,
         }
-
-        # Download the video
+        
+        # Download video
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            ydl.download([url])
+            try:
+                ydl.download([video_url])
+            except Exception as e:
+                raise Exception(f"Video download failed: {str(e)}")
 
-        return jsonify({
-            'status': 'success',
-            'message': 'Video downloaded successfully',
-            'title': video_info.get('title', 'Unknown')
-        })
+        if not os.path.exists(video_path):
+            raise FileNotFoundError("Video file not found after download")
+            
+        print(f"Video downloaded to: {video_path}")  # Debug log
+        
+        # Extract audio
+        processing_progress = 30
+        try:
+            audio = AudioSegment.from_file(video_path)
+            audio.export(audio_path, format="wav")
+            os.remove(video_path)  # Remove video file after extraction
+            
+            if not os.path.exists(audio_path):
+                raise FileNotFoundError("Audio file not found after extraction")
+                
+            print(f"Audio extracted to: {audio_path}")  # Debug log
+        except Exception as e:
+            if os.path.exists(video_path):
+                os.remove(video_path)
+            raise Exception(f"Audio extraction failed: {str(e)}")
+
+        # Process the audio
+        processing_progress = 40
+        update_model_status('whisper', 'processing', 'Transcribing audio...')
+        try:
+            result = transcriber.transcribe(audio_path)
+            transcript = result["text"].strip()
+        except Exception as e:
+            raise Exception(f"Transcription failed: {str(e)}")
+
+        # Generate summary
+        processing_progress = 70
+        update_model_status('bart', 'processing', 'Generating summary...')
+        if len(transcript.split()) >= 10:
+            try:
+                summary = summarizer(transcript, max_length=130, min_length=10)[0]['summary_text']
+            except Exception as e:
+                summary = "Error generating summary."
+        else:
+            summary = "Clip is too short for a meaningful summary."
+
+        # Cleanup and return results
+        processing_progress = 100
+        update_model_status('output', 'complete', 'Processing complete')
+        if os.path.exists(audio_path):
+            os.remove(audio_path)
+        return jsonify({'status': 'success', 'transcript': transcript, 'summary': summary})
 
     except Exception as e:
-        return jsonify({
-            'status': 'error',
-            'message': str(e)
-        }), 500
+        # Cleanup on error
+        for path in [video_path, audio_path]:
+            try:
+                if os.path.exists(path):
+                    os.remove(path)
+            except:
+                pass
+        
+        print(f"Error processing video: {str(e)}")  # Debug log
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
 @app.route('/')
 def index():

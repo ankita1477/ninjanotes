@@ -29,16 +29,12 @@ No GPT, No Paid APIs, No Hidden Costs
 - Basic transcription setup
 - Initial summarization framework
 - Local model integration
-- Universal video downloading
-- Support for multiple platforms
 
 ### 🚧 Under Development
 - Google Meet API integration
 - Real-time transcription
 - Enhanced model fine-tuning
 - Performance optimizations
-- Batch video processing
-- Video format conversion
 
 ### ⏳ Time Constraints
 Due to time limitations, we are currently:
@@ -178,16 +174,6 @@ python app.py
       <li>Error Handling</li>
     </ul>
   </div>
-
-  <div class="feature-card">
-    <img src="docs/video-download.gif" alt="Video Download"/>
-    <h3>📥 Video Download</h3>
-    <ul>
-      <li>Multiple platforms support</li>
-      <li>High quality downloads</li>
-      <li>Format selection</li>
-    </ul>
-  </div>
 </div>
 
 ## 🚀 How It Works
@@ -216,6 +202,13 @@ graph LR
   [Try it now!](#-quick-start)
 </div>
 
+## 🆕 Video Download & Audio Extraction
+NinjaNotes can now download videos from YouTube and other sources, extract the audio, and analyze/summarize it with AI. Ensure you have proper rights to any media processed.
+
+### Features
+- **YouTube & Universal Video Downloader**: Supports downloading videos from YouTube and other sources.
+- **Audio Extraction**: Converts downloaded videos to audio for processing.
+
 ## 🔌 API Guide
 
 ```javascript
@@ -230,13 +223,6 @@ Accept: text/event-stream
 
 // 3. Get Status
 GET /model-status
-
-// Download Video
-POST /download-video
-Content-Type: application/json
-{
-    "url": "https://www.youtube.com/watch?v=..."
-}
 ```
 
 ## 💻 Project Structure

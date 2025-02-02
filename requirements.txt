@@ -29,6 +29,3 @@ upnpclient==1.0.3
 python-natpmp==1.0.0
 netifaces==0.11.0
 requests==2.31.0
-
-# Video Downloading
-yt-dlp>=2023.12.30
