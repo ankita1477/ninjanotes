@@ -39,7 +39,7 @@ brew install ffmpeg
 ### 3. Setup Project
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/ninjanotes.git
+git clone https://github.com/ankita1477/ninjanotes.git
 cd ninjanotes
 
 # Create virtual environment

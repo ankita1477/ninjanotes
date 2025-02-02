@@ -37,7 +37,7 @@ See detailed instructions in [INSTALLATION.md](INSTALLATION.md)
 
 Quick setup:
 ```bash
-git clone https://github.com/yourusername/ninjanotes.git
+git clone https://github.com/ankita1477/ninjanotes.git
 cd ninjanotes
 python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
