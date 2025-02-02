@@ -13,22 +13,30 @@ import contextlib
 from pydub import AudioSegment  # Add this import
 from pytube import YouTube  # Add import
 import yt_dlp  # Add this import for universal video downloading
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # FFmpeg configuration
-FFMPEG_PATH = r"C:\ffmpeg-7.1-essentials_build\bin"
+FFMPEG_PATH = os.environ.get('FFMPEG_PATH', r"C:\ffmpeg-7.1-essentials_build\bin")
 os.environ["PATH"] = FFMPEG_PATH + os.pathsep + os.environ["PATH"]
 
 # Hugging Face configuration
-HUGGINGFACE_API_KEY = "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"
+HUGGINGFACE_API_KEY = os.environ.get('HUGGINGFACE_API_KEY', "your_default_key")
 os.environ["HUGGINGFACE_TOKEN"] = HUGGINGFACE_API_KEY
 
 app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = r'C:\Users\KIIT0001\Documents\New folder (2)\ninjanotes\uploads'
+
+# Update configuration for Render deployment
+UPLOAD_FOLDER = '/tmp/uploads' if os.environ.get('RENDER') else 'uploads'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
-ALLOWED_EXTENSIONS = {'mp3', 'wav', 'm4a', 'ogg'}
 
 # Create uploads directory if it doesn't exist
 Path(app.config['UPLOAD_FOLDER']).mkdir(parents=True, exist_ok=True)
+
+ALLOWED_EXTENSIONS = {'mp3', 'wav', 'm4a', 'ogg'}
 
 # Add global progress tracking
 processing_progress = 0
@@ -379,4 +387,5 @@ if __name__ == '__main__':
         print("ERROR: FFmpeg is not installed. Please install FFmpeg:")
         print(f"Expected path: {os.path.join(FFMPEG_PATH, 'ffmpeg.exe')}")
         exit(1)
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
