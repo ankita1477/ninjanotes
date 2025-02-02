@@ -23,3 +23,9 @@ google-api-python-client==2.97.0
 # Development
 python-dotenv==1.0.0
 playwright install
+
+# Networking
+upnpclient==1.0.3
+python-natpmp==1.0.0
+netifaces==0.11.0
+requests==2.31.0
