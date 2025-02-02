@@ -1,19 +1,92 @@
 <div align="center">
 
 # 🎯 NinjaNotes
-> Your AI-Powered Audio Assistant
+> Free & Open Source AI-Powered Audio Assistant
 
-[![Windows Support](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)](INSTALLATION.md)
-[![Python](https://img.shields.io/badge/Python-3.8+-blue.svg?logo=python&logoColor=white)](https://www.python.org)
-[![Flask](https://img.shields.io/badge/Flask-000000?style=for-the-badge&logo=flask&logoColor=white)](https://flask.palletsprojects.com/)
+[![Open Source](https://img.shields.io/badge/Open%20Source-100%25-brightgreen.svg)](LICENSE)
+[![No Paid APIs](https://img.shields.io/badge/No%20Paid%20APIs-✓-success.svg)](AI_MODELS.md)
+[![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)](INSTALLATION.md)
 
-Transform audio files into text and summaries using AI 🎙️ ➡️ 📝
+🎉 **All Features Are Free & Self-Hosted!** 
+No GPT, No Paid APIs, No Hidden Costs
 
-[Installation](INSTALLATION.md) • [Quick Start](#-quick-start) • [Features](#-features) • [Support](#-support)
+[Setup Guide](INSTALLATION.md) • [Current Status](#-project-status) • [Roadmap](#-roadmap)
 
 </div>
 
 ---
+
+## 🌟 Project Status
+
+### ✅ Currently Working
+- Audio file upload & validation
+- Basic transcription setup
+- Initial summarization framework
+- Local model integration
+
+### 🚧 Under Development
+- Google Meet API integration
+- Real-time transcription
+- Enhanced model fine-tuning
+- Performance optimizations
+
+### ⏳ Time Constraints
+Due to time limitations, we are currently:
+- Focusing on core audio processing
+- Working on model fine-tuning
+- Planning Google Meet integration
+
+## 🎯 Feature Status
+
+<table>
+<tr>
+<td width="50%">
+
+### 🟢 Working Features
+- File upload system
+- Audio validation
+- Basic processing
+- Local model setup
+
+</td>
+<td width="50%">
+
+### 🟡 Coming Soon
+- Google Meet integration
+- Real-time processing
+- Enhanced accuracy
+- Custom fine-tuned models
+
+</td>
+</tr>
+</table>
+
+## 💡 Why Free & Open Source?
+
+- **No Paid APIs**: Using locally hosted models
+- **Self-Contained**: All processing done on your machine
+- **Privacy First**: No data sent to external services
+- **Cost Effective**: Zero running costs
+- **Customizable**: Full control over models
+
+## 🚀 Current Implementation
+
+```mermaid
+graph TD
+    A[Audio Upload] -->|Working| B[Validation]
+    B -->|In Progress| C[Processing]
+    C -->|Coming Soon| D[Enhanced Results]
+    E[Google Meet] -->|Planned| F[Real-time]
+```
+
+## 📅 Development Timeline
+
+| Feature | Status | ETA |
+|---------|--------|-----|
+| Audio Upload | ✅ Done | - |
+| Basic Processing | 🟡 Testing | 1 week |
+| Model Fine-tuning | 🟠 In Progress | 2 weeks |
+| Google Meet | 🔴 Planned | 3 weeks |
 
 ## 🎯 Overview
 
@@ -171,10 +244,28 @@ ninjanotes/
 
 Need help? [Open an Issue](https://github.com/ankita1477/ninjanotes/issues)
 
+## 🔄 Latest Updates
+
+- Added basic audio processing
+- Implemented file validation
+- Setting up model infrastructure
+- Planning Google Meet integration
+
+## 🎯 Next Steps
+
+1. Complete model fine-tuning
+2. Enhance processing accuracy
+3. Add Google Meet support
+4. Improve real-time capabilities
+
+Need help or want to contribute? [Join Us](https://github.com/ankita1477/ninjanotes/issues)
+
 <div align="center">
 
 ---
 
 Made with 🧡 by [ankita1477](https://github.com/ankita1477)
+
+**Note**: This project is under active development. Features are being added regularly!
 
 </div>
