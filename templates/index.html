@@ -88,6 +88,31 @@
             </div>
         </div>
 
+        <div class="quick-record-area mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">📱 Quick Recording</h5>
+                    <p class="card-text">Start recording instantly without joining a meeting.</p>
+                    <div class="mb-3">
+                        <button class="btn btn-secondary mb-2" onclick="testMicrophone()">
+                            🎤 Test Microphone
+                        </button>
+                        <div class="progress mb-2" style="height: 20px; display: none;" id="micLevel">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: 0%">
+                                Audio Level
+                            </div>
+                        </div>
+                        <div id="micStatus" class="alert" style="display: none;"></div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-primary" onclick="startAutoRecord()">Start Recording</button>
+                        <button class="btn btn-danger" onclick="stopAutoRecord()">Stop Recording</button>
+                    </div>
+                    <div id="recordingStatus" class="alert mt-3" style="display: none;"></div>
+                </div>
+            </div>
+        </div>
+
         <div class="result-card" id="transcriptBox">
             <h3 class="mb-3">📝 Transcript</h3>
             <div id="transcript" class="border-start border-4 border-primary ps-3">
@@ -289,6 +314,200 @@
             statusDiv.textContent = message;
             statusDiv.style.display = 'block';
         }
+
+        async function checkPermissions() {
+            try {
+                // Check browser media permissions
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                stream.getTracks().forEach(track => track.stop());
+                
+                // Check backend audio devices
+                const response = await fetch('/check-permissions');
+                const data = await response.json();
+                
+                if (!data.devices_ok) {
+                    throw new Error(data.message);
+                }
+                
+                // Test microphone
+                const micResponse = await fetch('/test-mic', { method: 'POST' });
+                const micData = await micResponse.json();
+                
+                if (!micData.working) {
+                    throw new Error('Microphone not detecting audio');
+                }
+                
+                return true;
+            } catch (error) {
+                console.error('Permission check failed:', error);
+                const statusDiv = document.getElementById('recordingStatus');
+                statusDiv.className = 'alert alert-danger mt-3';
+                statusDiv.textContent = `Please grant microphone permissions and ensure audio device is connected: ${error.message}`;
+                statusDiv.style.display = 'block';
+                return false;
+            }
+        }
+
+        async function startAutoRecord() {
+            const statusDiv = document.getElementById('recordingStatus');
+            statusDiv.className = 'alert alert-info mt-3';
+            statusDiv.textContent = 'Checking permissions...';
+            statusDiv.style.display = 'block';
+
+            // Check permissions first
+            if (!await checkPermissions()) {
+                return;
+            }
+
+            statusDiv.textContent = 'Starting recording...';
+
+            fetch('/auto-record', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ action: 'start' })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    statusDiv.className = 'alert alert-success mt-3';
+                    statusDiv.textContent = '🎙️ Recording in progress...';
+                } else {
+                    statusDiv.className = 'alert alert-danger mt-3';
+                    statusDiv.textContent = data.message;
+                }
+            })
+            .catch(error => {
+                statusDiv.className = 'alert alert-danger mt-3';
+                statusDiv.textContent = 'Failed to start recording';
+            });
+        }
+
+        function stopAutoRecord() {
+            const statusDiv = document.getElementById('recordingStatus');
+            statusDiv.className = 'alert alert-info mt-3';
+            statusDiv.textContent = 'Stopping recording...';
+
+            fetch('/auto-record', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ action: 'stop' })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    statusDiv.className = 'alert alert-info mt-3';
+                    statusDiv.textContent = '✅ Recording processed successfully';
+                    
+                    // Display results
+                    if (data.data) {
+                        document.getElementById('transcript').textContent = data.data.transcript;
+                        document.getElementById('summary').textContent = data.data.summary;
+                        document.getElementById('transcriptBox').style.display = 'block';
+                        document.getElementById('summaryBox').style.display = 'block';
+                        
+                        if (data.data.analysis) {
+                            displayAnalysis(data.data.analysis);
+                        }
+                    }
+                } else {
+                    statusDiv.className = 'alert alert-danger mt-3';
+                    statusDiv.textContent = data.message;
+                }
+            })
+            .catch(error => {
+                statusDiv.className = 'alert alert-danger mt-3';
+                statusDiv.textContent = 'Failed to stop recording';
+            });
+        }
+
+        function displayAnalysis(analysis) {
+            document.getElementById('analysisBox').style.display = 'block';
+            
+            // Show sentiment
+            const sentimentDiv = document.getElementById('sentiment');
+            sentimentDiv.innerHTML = `
+                <div class="alert alert-${analysis.sentiment.label === 'POSITIVE' ? 'success' : 'warning'}">
+                    ${analysis.sentiment.label} (${Math.round(analysis.sentiment.score * 100)}% confidence)
+                </div>
+            `;
+            
+            // Show meeting type
+            document.getElementById('meetingType').textContent = 
+                `${analysis.meeting_type.type} (${Math.round(analysis.meeting_type.confidence * 100)}% confidence)`;
+            
+            // Show action items
+            const actionList = document.getElementById('actionItems');
+            actionList.innerHTML = analysis.action_items
+                .map(item => `<li class="list-group-item">🎯 ${item}</li>`)
+                .join('');
+            
+            // Show speakers
+            const speakersDiv = document.getElementById('speakers');
+            speakersDiv.innerHTML = analysis.speakers
+                .map(speaker => `<span class="badge bg-primary">${speaker}</span>`)
+                .join('');
+        }
+
+        async function testMicrophone() {
+            const micLevel = document.getElementById('micLevel');
+            const micStatus = document.getElementById('micStatus');
+            const testButton = document.querySelector('button[onclick="testMicrophone()"]');
+            
+            try {
+                // Request microphone permission first
+                await navigator.mediaDevices.getUserMedia({ audio: true });
+                
+                testButton.disabled = true;
+                micStatus.className = 'alert alert-info';
+                micStatus.textContent = 'Testing microphone... Please speak';
+                micStatus.style.display = 'block';
+                micLevel.style.display = 'block';
+                
+                const response = await fetch('/test-mic', { method: 'POST' });
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    // Update level indicator
+                    const levelPercent = Math.min(100, Math.max(0, data.level * 5));
+                    micLevel.querySelector('.progress-bar').style.width = `${levelPercent}%`;
+                    micLevel.querySelector('.progress-bar').textContent = 
+                        `Audio Level: ${Math.round(levelPercent)}%`;
+                    
+                    // Update status
+                    micStatus.className = `alert alert-${data.working ? 'success' : 'warning'}`;
+                    micStatus.textContent = data.message;
+                } else {
+                    micStatus.className = 'alert alert-danger';
+                    micStatus.textContent = data.message;
+                }
+            } catch (error) {
+                micStatus.className = 'alert alert-danger';
+                micStatus.textContent = 'Microphone access denied or not available';
+                micLevel.style.display = 'none';
+            } finally {
+                testButton.disabled = false;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const quickRecordArea = document.querySelector('.quick-record-area');
+            const startButton = quickRecordArea.querySelector('button');
+            
+            try {
+                if (await checkPermissions()) {
+                    startButton.disabled = false;
+                } else {
+                    startButton.disabled = true;
+                }
+            } catch (error) {
+                console.error('Initial permission check failed:', error);
+                startButton.disabled = true;
+            }
+        });
     </script>
 </body>
 </html>
