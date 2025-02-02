@@ -1,35 +1,20 @@
 # Web Framework
 flask==2.0.1
+gunicorn==20.1.0
+python-dotenv==0.19.0
 
 # Audio Processing
 whisper==1.0.0
-sounddevice==0.4.6
 soundfile==0.10.3.post1
-pyaudio==0.2.13
 numpy==1.21.6
 pydub==0.25.1
 yt-dlp==2023.7.6
 pytube==15.0.0
-
-# Browser Automation
-playwright==1.38.0
 
 # Machine Learning
 transformers==4.30.2
 torch==2.0.1
 torchaudio==2.0.2
 
-# Google Meet Integration
-google-auth-oauthlib==1.0.0
-google-api-python-client==2.97.0
-
 # Development
-python-dotenv==0.19.0
-playwright install
-gunicorn==20.1.0
-
-# Networking
-upnpclient==1.0.3
-python-natpmp==1.0.0
-netifaces==0.11.0
 requests==2.31.0
