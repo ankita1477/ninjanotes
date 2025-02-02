@@ -1,113 +1,174 @@
+<div align="center">
+
 # 🎯 NinjaNotes
-> AI-Powered Audio Processing & Summarization Tool
 
-![Python](https://img.shields.io/badge/Python-3.8+-blue)
-![License](https://img.shields.io/badge/License-MIT-green)
-![FFmpeg](https://img.shields.io/badge/FFmpeg-Required-orange)
+[![Python](https://img.shields.io/badge/Python-3.8+-blue.svg?logo=python&logoColor=white)](https://www.python.org)
+[![Flask](https://img.shields.io/badge/Flask-2.0+-green.svg?logo=flask&logoColor=white)](https://flask.palletsprojects.com/)
+[![FFmpeg](https://img.shields.io/badge/FFmpeg-Required-orange.svg?logo=ffmpeg&logoColor=white)](https://ffmpeg.org)
+[![License](https://img.shields.io/badge/License-MIT-purple.svg)](LICENSE)
 
-## 📚 Table of Contents
-1. [Features](#-features)
-2. [Quick Start](#-quick-start)
-3. [Installation](#-installation)
-4. [Usage Guide](#-usage-guide)
-5. [Technical Details](#-technical-details)
-6. [Troubleshooting](#-troubleshooting)
-7. [Contributing](#-contributing)
+> 🎙️ Transform Audio to Intelligence: Automated Transcription & Summarization
 
-## ✨ Features
-### Core Capabilities
-- 🎙️ Multi-format Audio Processing (MP3, WAV, M4A, OGG)
-- 📝 Advanced Speech-to-Text Transcription
-- ✨ Intelligent Text Summarization
-- 📊 Real-time Progress Tracking
+[Quick Start](#quick-start) • [Features](#features) • [Installation](#installation) • [Documentation](#documentation)
 
-### AI Models
-| Model | Task | Accuracy | Speed |
-|-------|------|----------|-------|
-| OpenAI Whisper | Transcription | 85-95% | Real-time |
-| Facebook BART | Summarization | 90%+ | <2s/text |
+<img src="https://raw.githubusercontent.com/ankita1477/ninjanotes/main/docs/demo.gif" alt="NinjaNotes Demo" width="600px"/>
 
-## 🚀 Quick Start
+</div>
+
+---
+
+## ⚡ Quick Start
+
 ```bash
-git clone https://github.com/ankita1477/ninjanotes.git
-cd ninjanotes
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-pip install -r requirements.txt
-python app.py
+git clone https://github.com/ankita1477/ninjanotes.git && cd ninjanotes
+python -m venv venv && source venv/bin/activate
+pip install -r requirements.txt && python app.py
 ```
 
-## 📥 Installation
-Detailed installation steps in [INSTALLATION.md](INSTALLATION.md)
+🌐 Open [http://localhost:5000](http://localhost:5000)
 
-### System Requirements
+## 🌟 Features
+
+<table>
+<tr>
+<td width="50%">
+
+### 🎙️ Audio Processing
+- Multi-format Support
+  - MP3, WAV, M4A, OGG
+- Real-time Processing
+- Automatic Format Conversion
+- Quality Validation
+
+</td>
+<td width="50%">
+
+### 🤖 AI Capabilities
+- Speech Recognition
+  - 85-95% Accuracy
+  - Noise Handling
+- Smart Summarization
+  - Key Point Extraction
+  - Context Awareness
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+### 📊 Progress Tracking
+- Real-time Status Updates
+- Stage-wise Monitoring
+- Error Notifications
+- Process Analytics
+
+</td>
+<td width="50%">
+
+### 🛠️ Developer Features
+- RESTful API
+- Error Handling
+- Progress Streaming
+- Easy Integration
+
+</td>
+</tr>
+</table>
+
+## 📚 Documentation
+
+### API Endpoints
+
+| Endpoint | Method | Description | Example |
+|----------|--------|-------------|---------|
+| `/` | GET | Web Interface | [Try It](http://localhost:5000) |
+| `/process` | POST | Process Audio | `curl -F "file=@audio.mp3"` |
+| `/progress` | GET | Track Progress | Server-Sent Events |
+| `/model-status` | GET | AI Status | JSON Response |
+
+### File Support
+
+```mermaid
+graph LR
+    A[Audio Input] --> B[Validation]
+    B --> C[Processing]
+    C --> D[Output]
+    
+    style A fill:#ff9900,stroke:#fff,stroke-width:2px
+    style B fill:#00b894,stroke:#fff,stroke-width:2px
+    style C fill:#0984e3,stroke:#fff,stroke-width:2px
+    style D fill:#6c5ce7,stroke:#fff,stroke-width:2px
+```
+
+## 💻 Installation
+
+<details>
+<summary>Click to expand installation steps</summary>
+
+### Prerequisites
 - Python 3.8+
 - FFmpeg
 - 4GB RAM
-- 2GB disk space
-- Modern web browser
+- Modern Browser
 
-## 📝 Usage Guide
+### Detailed Steps
+See [INSTALLATION.md](INSTALLATION.md)
+</details>
 
-### Processing Audio Files
-1. Launch application
-2. Upload audio file (MP3/WAV/M4A/OGG)
-3. Monitor progress indicators
-4. View transcript and summary
+## 🚀 Usage
 
-### API Endpoints
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/` | GET | Main interface |
-| `/process` | POST | Process audio |
-| `/progress` | GET | Track progress |
-| `/model-status` | GET | Model status |
+1. **Start Server**
+   ```bash
+   python app.py
+   ```
 
-## 🔧 Technical Details
+2. **Upload Audio**
+   - Drag & drop file
+   - Or click upload button
+   - Supported: MP3, WAV, M4A, OGG
 
-### Project Structure
-```
-ninjanotes/
-├── app.py              # Main application
-├── requirements.txt    # Dependencies
-├── uploads/           # Audio storage
-├── templates/         # Frontend
-└── README.md         # Documentation
-```
+3. **Monitor Progress**
+   - Watch real-time updates
+   - Check processing stages
+   - View final results
 
-### Technologies
-- Backend: Flask
-- AI: Whisper, BART
-- Audio: FFmpeg
-- Frontend: Bootstrap
+## 🔧 Troubleshooting
 
-## ⚠️ Troubleshooting
+<details>
+<summary>Common Issues</summary>
 
-### Common Issues
-| Issue | Solution |
-|-------|----------|
-| FFmpeg missing | [Install Guide](INSTALLATION.md#2-install-ffmpeg) |
-| Port in use | Change port in app.py |
-| Memory error | Free up RAM |
-| Upload fails | Check file size (<16MB) |
+| Issue | Quick Fix | Details |
+|-------|-----------|----------|
+| FFmpeg Missing | [Install FFmpeg](INSTALLATION.md#2-install-ffmpeg) | Required for audio processing |
+| Upload Fails | Check file size (<16MB) | Size limit: 16MB |
+| Port Busy | Change port in app.py | Default: 5000 |
+| Memory Error | Free up RAM | Need: 4GB+ |
 
-### Error Handling
-- Automatic format validation
-- Audio quality checks
-- Model error recovery
-- Progress monitoring
+</details>
 
 ## 🤝 Contributing
-1. Fork repository
-2. Create feature branch
-3. Commit changes
-4. Push to branch
-5. Open pull request
+
+```mermaid
+graph LR
+    A[Fork] -->|1| B[Branch]
+    B -->|2| C[Changes]
+    C -->|3| D[Test]
+    D -->|4| E[PR]
+    
+    style A fill:#fd79a8,stroke:#fff,stroke-width:2px
+    style E fill:#00b894,stroke:#fff,stroke-width:2px
+```
 
 ## 📄 License
-MIT License
 
-## 🙏 Acknowledgments
-- OpenAI Whisper Team
-- Facebook BART Team
-- FFmpeg Project
+MIT © [ankita1477](https://github.com/ankita1477)
+
+---
+
+<div align="center">
+
+Made with ❤️ by [ankita1477](https://github.com/ankita1477)
+
+[🔝 Back to Top](#)
+
+</div>
