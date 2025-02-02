@@ -29,6 +29,9 @@ No GPT, No Paid APIs, No Hidden Costs
 - Basic transcription setup
 - Initial summarization framework
 - Local model integration
+- Speaker diarization
+- Detailed text analysis
+- Real-time system status monitoring
 
 ### 🚧 Under Development
 - Google Meet API integration

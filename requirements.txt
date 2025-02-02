@@ -17,5 +17,15 @@ transformers>=4.30.2
 torch>=2.0.1
 torchaudio>=2.0.2
 
+# Speaker Detection
+pyannote.audio>=2.1.1
+torch>=2.0.1
+torchaudio>=2.0.2
+
 # Development
 requests>=2.31.0
+
+# Text Analysis
+textblob>=0.15.3
+spacy>=3.0.0
+keybert>=0.7.0
