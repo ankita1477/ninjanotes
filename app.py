@@ -24,12 +24,13 @@ from keybert import KeyBERT
 import psutil
 import GPUtil
 import shutil  # Add this import for disk usage info
+from flask_cors import CORS  # Add this import
 
 # Load environment variables
 load_dotenv()
 
 # FFmpeg configuration
-FFMPEG_PATH = os.environ.get('FFMPEG_PATH', r"C:\ffmpeg-7.1-essentials_build\bin")
+FFMPEG_PATH = os.environ.get('FFMPEG_PATH', r"C:\ffmpeg-2025-01-30-git-1911a6ec26-essentials_build\bin")
 os.environ["PATH"] = FFMPEG_PATH + os.pathsep + os.environ["PATH"]
 
 # Hugging Face configuration
@@ -37,6 +38,7 @@ HUGGINGFACE_API_KEY = os.environ.get('HUGGINGFACE_API_KEY', "your_default_key")
 os.environ["HUGGINGFACE_TOKEN"] = HUGGINGFACE_API_KEY
 
 app = Flask(__name__)
+CORS(app)  # Enable CORS
 
 # Update configuration for Render deployment
 UPLOAD_FOLDER = '/tmp/uploads' if os.environ.get('RENDER') else 'uploads'
@@ -242,6 +244,7 @@ def process_audio():
         model_status['stages'][stage] = {'status': 'waiting', 'details': ''}
     
     filename = None
+    audio_path = None
     
     try:
         if 'file' not in request.files:
@@ -292,46 +295,95 @@ def process_audio():
             except Exception as e:
                 raise ValueError(f"Audio conversion failed: {str(e)}")
 
-        # Whisper model stage
-        update_model_status('whisper', 'processing', 'Converting speech to text...')
-        # Continue with transcription
+        # Process audio file
         processing_progress = 30
+        update_model_status('whisper', 'processing', 'Processing audio...')
         try:
-            result = transcriber.transcribe(filename)
+            # Get audio duration
+            audio = AudioSegment.from_file(filename)
+            duration = format_timestamp(audio.duration_seconds)
+            
+            # Convert to WAV with specific parameters
+            audio = audio.set_channels(1)  # Convert to mono
+            audio = audio.set_frame_rate(16000)  # Set sample rate to 16kHz
+            wav_filename = filename.rsplit('.', 1)[0] + '.wav'
+            audio.export(wav_filename, format='wav', parameters=["-ac", "1", "-ar", "16000"])
+            
+            if filename != wav_filename:
+                os.remove(filename)
+            audio_path = wav_filename
+            
+        except Exception as e:
+            raise ValueError(f"Audio processing failed: {str(e)}")
+
+        # Transcribe audio
+        processing_progress = 50
+        update_model_status('whisper', 'processing', 'Transcribing audio...')
+        try:
+            result = transcriber.transcribe(audio_path)
             if not result or not result.get("text"):
                 raise ValueError("No speech detected in audio")
+            
+            # Get basic transcript
             transcript = result["text"].strip()
+            
+            # Add timestamps and detect speakers
+            transcript = process_with_speaker_diarization(audio_path, transcript)
+            
+            # Get segments/chapters
+            segments = result.get("segments", [])
+            chapters = [
+                {
+                    "start": format_timestamp(seg["start"]),
+                    "end": format_timestamp(seg["end"]),
+                    "text": seg["text"]
+                }
+                for seg in segments
+            ]
+            
         except Exception as e:
             raise ValueError(f"Transcription failed: {str(e)}")
 
-        processing_progress = 60
-        # BART model stage
+        # Generate summary
+        processing_progress = 70
         update_model_status('bart', 'processing', 'Generating summary...')
-        # Generate summary if transcript is long enough
         if len(transcript.split()) >= 10:
             try:
-                max_length = min(130, max(30, len(transcript.split()) // 2))
-                summary = summarizer(
-                    transcript,
-                    max_length=max_length,
-                    min_length=min(10, max_length - 5)
-                )[0]['summary_text']
+                summary = summarizer(transcript, max_length=130, min_length=10)[0]['summary_text']
             except Exception as e:
-                summary = "Error generating summary. Using transcript only."
+                summary = "Error generating summary."
         else:
-            summary = "Audio clip is too short to generate a meaningful summary."
+            summary = "Audio clip is too short for a meaningful summary."
+
+        # Add analysis
+        processing_progress = 85
+        update_model_status('bart', 'processing', 'Analyzing content...')
+        analysis = analyze_text(transcript)
         
-        processing_progress = 90
-        # Output stage
-        update_model_status('output', 'complete', 'Processing complete')
-        # Clean up
-        os.remove(filename)
+        # Get stats
+        stats = {
+            'wordCount': len(transcript.split()),
+            'speakerCount': len(set(line.split(']')[1].split(':')[0].strip() 
+                              for line in transcript.split('\n') 
+                              if ']' in line and ':' in line)),
+            'duration': duration,
+            'sentiment': analysis['sentiment']
+        }
         
+        # Cleanup and return results
         processing_progress = 100
+        update_model_status('output', 'complete', 'Processing complete')
+        if os.path.exists(audio_path):
+            os.remove(audio_path)
+            
         return jsonify({
             'status': 'success',
             'transcript': transcript,
-            'summary': summary
+            'summary': summary,
+            'duration': duration,
+            'chapters': chapters,
+            'analysis': analysis,
+            'stats': stats
         })
         
     except Exception as e:
@@ -714,7 +766,10 @@ def sample_audio(sample_type):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return jsonify({
+        'status': 'ok',
+        'message': 'NinjaNotes API is running'
+    })
 
 if __name__ == '__main__':
     if not check_ffmpeg():
